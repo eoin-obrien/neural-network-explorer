@@ -273,6 +273,16 @@ export interface ActivationDefinition<Config = undefined> {
 
 Avoid over-generalizing the generic type if a simpler discriminated union produces clearer code.
 
+The implemented registry takes the discriminated-union route: definitions carry
+a `defaultSelection` and `evaluateActivation` is the single dispatch point.
+That leaves one open question for Gate 3. A definition says nothing about
+*configurable* activation parameters, so building `{ id: 'leaky-relu', alpha }`
+for the alpha control means narrowing on the id inside presentation, which is
+the id-branching this document warns about under "Activation leakage". Decide
+at Gate 3, when the control exists, whether definitions should describe their
+own configuration; do not build that channel earlier, with no caller, because a
+plugin framework with one speculative use is itself a defect here.
+
 ### 5.2 Initial activations
 
 Implement and test:
@@ -1454,7 +1464,14 @@ Acceptance:
 - arbitrary unit-count component test;
 - no hard-coded three-column layout;
 - wide/narrow layout smoke tests;
-- `pnpm verify` passes.
+- `pnpm verify` passes;
+- `knip --production` is clean.
+
+Plain `knip` treats a test as a caller, so an export consumed only by its own
+test passes. Every Gate 1 and Gate 2 export is test-only by construction, so
+that check cannot detect speculative domain API until presentation consumes the
+domain. Gate 3 is the first point where `--production` is meaningful, and it is
+where the activation configuration channel below must be settled.
 
 ### Gate 4 — charts and synchronized probe
 
