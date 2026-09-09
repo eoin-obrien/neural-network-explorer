@@ -1,0 +1,14 @@
+.card {
+  transition: opacity 150ms ease;
+}
+
+.excluded {
+  opacity: 0.55;
+}
+
+/* The excluded state is carried by the label and the muting, never by motion. */
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+}

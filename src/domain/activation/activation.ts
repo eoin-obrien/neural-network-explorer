@@ -4,7 +4,10 @@ import { relu } from './relu';
 import { sigmoid } from './sigmoid';
 import { tanh } from './tanh';
 
-export type ActivationId = 'relu' | 'leaky-relu' | 'sigmoid' | 'tanh' | 'identity';
+/** Display order for activation controls. */
+export const activationIds = ['relu', 'leaky-relu', 'sigmoid', 'tanh', 'identity'] as const;
+
+export type ActivationId = (typeof activationIds)[number];
 
 /**
  * A layer's chosen activation together with any configuration that activation
@@ -29,38 +32,54 @@ interface ActivationDefinition {
   readonly defaultSelection: ActivationSelection;
 }
 
-export const activationRegistry: readonly ActivationDefinition[] = [
-  {
+export const activationDefinitions: Readonly<Record<ActivationId, ActivationDefinition>> = {
+  relu: {
     id: 'relu',
     name: 'ReLU',
     notation: 'a[z] = max(0, z)',
     defaultSelection: { id: 'relu' },
   },
-  {
+  'leaky-relu': {
     id: 'leaky-relu',
     name: 'Leaky ReLU',
     notation: 'a[z] = z if z ≥ 0, otherwise αz',
     defaultSelection: { id: 'leaky-relu', alpha: 0.1 },
   },
-  {
+  sigmoid: {
     id: 'sigmoid',
     name: 'Logistic (sigmoid)',
     notation: 'a[z] = 1 / (1 + exp(-z))',
     defaultSelection: { id: 'sigmoid' },
   },
-  {
+  tanh: {
     id: 'tanh',
     name: 'Tanh',
     notation: 'a[z] = tanh(z)',
     defaultSelection: { id: 'tanh' },
   },
-  {
+  identity: {
     id: 'identity',
     name: 'Identity',
     notation: 'a[z] = z',
     defaultSelection: { id: 'identity' },
   },
-];
+};
+
+/**
+ * A control hands back a plain string, or nothing. This narrows that untrusted
+ * value to the selection it names, so no caller has to assert that a control
+ * can only produce known ids.
+ *
+ * The empty-or-single sequence is deliberate: a `| undefined` return would push
+ * an `if` into the one caller that can never take its false branch, because the
+ * control only ever offers ids this registry declares. A sequence lets the
+ * caller stay total, and the unknown-value case is checked here instead.
+ */
+export function activationSelectionFor(value: string | null): readonly ActivationSelection[] {
+  return activationIds
+    .filter((id) => id === value)
+    .map((id) => activationDefinitions[id].defaultSelection);
+}
 
 /**
  * The single dispatch point from a selection to its evaluator. Network

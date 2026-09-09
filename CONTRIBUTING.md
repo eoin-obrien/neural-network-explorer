@@ -48,23 +48,35 @@ Subjects are limited to 72 characters. Scopes name a concept — `domain`,
 
 These are decisions, not oversights. Revisit them rather than copying them.
 
-- **TypeScript 5.9.3, not 6.x.** TypeScript 6.0.3 is released and is inside
-  `typescript-eslint`'s supported range (`>=4.8.4 <6.1.0`), so the blocker is
-  not availability. It is Mantine: under TypeScript 6 the declaration files
-  `@mantine/core` 9.6.0 ships fail with `TS2320` across roughly twenty input
-  components, because `__BaseInputProps` and `ElementProps` disagree on
-  `disabled`. None of that is this repository's code — the errors surface only
-  because the application project deliberately keeps `skipLibCheck: false`, and
-  turning that off to buy a version bump would trade a real guarantee for a
-  cosmetic one. Revisit when Mantine publishes TypeScript 6 compatible types.
-  TypeScript 7 is a separate matter: `latest` is already 7.x, and it falls
-  outside `typescript-eslint`'s range, so it would cost type-aware linting,
-  which is a hard requirement.
-- **`skipLibCheck` is `false` for the application project only.** Vite and
-  Vitest publish `.d.ts` files that do not survive
+- **TypeScript 5.9.3, not 6.x.** TypeScript 7 is the hard constraint: `latest`
+  is already 7.x and falls outside `typescript-eslint`'s supported range
+  (`>=4.8.4 <6.1.0`), so adopting it would cost type-aware linting, which is a
+  requirement. TypeScript 6.0.3 is inside that range, and the reason it was
+  refused no longer holds: it failed with `TS2320` across roughly twenty
+  `@mantine/core` 9.6.0 input components, and those errors reached the build
+  only because the application project kept `skipLibCheck: false`. It no longer
+  does — see the next entry — so a TypeScript 6 bump is now an open question
+  rather than a blocked one, and should be evaluated on its own merits.
+- **`skipLibCheck` is `true` for both projects.** `tsconfig.node.json` has
+  always needed it: Vite and Vitest publish `.d.ts` files that do not survive
   `exactOptionalPropertyTypes`, and one references a module pnpm does not
-  hoist. `tsconfig.node.json` therefore sets `skipLibCheck: true`;
-  `tsconfig.app.json` does not.
+  hoist. `tsconfig.app.json` joined it at Gate 3, when the charts arrived.
+  Mantine Charts pulls in Recharts, whose transitive `@reduxjs/toolkit` ships
+  declarations written without `exactOptionalPropertyTypes` in mind: six errors
+  in `dist/index.d.mts`, five of them `ThunkApiConfig` constraint failures and
+  one a `TaskAbortError` that declares `code?: string` against a
+  `SerializedError` requiring `code: string`. Every one is inside
+  `node_modules` and none in this source tree, and all six disappear when
+  `exactOptionalPropertyTypes` is turned off, so they are a strictness mismatch
+  rather than a broken dependency. Both the resolved 2.9.0 and the latest
+  2.12.0 were checked under a pnpm override and behave identically, so pinning
+  buys nothing. Application code keeps every strict flag,
+  `exactOptionalPropertyTypes` included. What is lost is the early warning that
+  caught the Mantine declaration breakage above, so a dependency bump that
+  breaks types will now surface at the point of use rather than at the point of
+  upgrade. Turning it on also made `ESNext.Collection` and `ESNext.Float16`
+  redundant in `tsconfig.app.json#lib`; both were there only to satisfy
+  declarations that are no longer checked.
 - **`eslint-plugin-jsx-a11y` declares support only up to ESLint 9.** ESLint 9 is
   end-of-life, so this repository runs ESLint 10 and records the override in
   `pnpm.peerDependencyRules`. The plugin was verified to lint correctly under
@@ -76,14 +88,25 @@ These are decisions, not oversights. Revisit them rather than copying them.
 - **`src/main.tsx` is excluded from coverage.** It is the DOM bootstrap. All
   other source is held to 100% statements, branches, functions, and lines.
 - **Mutation testing is not configured yet.** Per IMPLEMENTATION.md it is
-  introduced after Gate 2, once there is a mathematical domain to mutate.
+  introduced after Gate 2. The domain now exists, so this is the next piece of
+  tooling owed rather than a standing decision.
+- **The bundle budget jumped at Gate 3.** The gzip JavaScript limit went from
+  80 kB to 245 kB against a measured 232.0 kB. Mantine Charts and its Recharts
+  dependency tree — Redux Toolkit, Immer, `es-toolkit`, and the d3 modules
+  behind `victory-vendor` — account for essentially all of it. The budget was
+  re-measured, not estimated; treat any further increase the same way.
+- **`knip --production` reports `reachableRange` as unused.** It is Gate 1 work
+  whose consumer is the reachable scale mode at Gate 5; Gate 3 ships the fixed
+  teaching scale only. `src/testSetup.ts` is likewise reported, because it is
+  the test harness and `--production` excludes test entries. Plain `pnpm knip`,
+  which is what CI runs, is clean.
 
 ## Licence obligations
 
 The project is AGPL-3.0-or-later. Section 13 requires that anyone who interacts
 with a modified version over a network be offered its corresponding source, so
-the deployed interface must carry a visible link to the repository. The Gate 0
-shell has no header yet; add that link when the header lands at Gate 3.
+the deployed interface must carry a visible link to the repository. The header
+carries that link; keep it visible in any future layout.
 
 ## Pages and DNS
 

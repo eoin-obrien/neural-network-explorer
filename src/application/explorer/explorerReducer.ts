@@ -1,0 +1,63 @@
+import type { ExcludedUnitIds, UnitId } from '../../domain/network/types';
+import type { Preset } from '../presets/preset';
+import type { ExplorerState } from './explorerState';
+import { initialExplorerState } from './explorerState';
+import type { NetworkAction } from './updateNetwork';
+import { updateNetwork } from './updateNetwork';
+
+/** Interventions that leave every theta and phi exactly as they were. */
+type ExplorationAction =
+  | { readonly type: 'setProbeX'; readonly value: number }
+  | { readonly type: 'setUnitExcluded'; readonly unitId: UnitId; readonly excluded: boolean }
+  | { readonly type: 'reset'; readonly preset: Preset };
+
+export type ExplorerAction = NetworkAction | ExplorationAction;
+
+/**
+ * The split between the two halves is the point: an action either edits the
+ * canonical network or it does not. Forgetting to classify a new exploration
+ * action fails to compile, because updateNetwork cannot accept it.
+ */
+export function explorerReducer(state: ExplorerState, action: ExplorerAction): ExplorerState {
+  return isExplorationAction(action)
+    ? updateExploration(state, action)
+    : { ...state, network: updateNetwork(state.network, action) };
+}
+
+function isExplorationAction(action: ExplorerAction): action is ExplorationAction {
+  return (
+    action.type === 'reset' || action.type === 'setProbeX' || action.type === 'setUnitExcluded'
+  );
+}
+
+function updateExploration(state: ExplorerState, action: ExplorationAction): ExplorerState {
+  switch (action.type) {
+    case 'reset':
+      return initialExplorerState(action.preset);
+    case 'setProbeX':
+      return { ...state, probeX: action.value };
+    case 'setUnitExcluded':
+      return {
+        ...state,
+        excludedUnitIds: withExclusion(state.excludedUnitIds, action.unitId, action.excluded),
+      };
+  }
+}
+
+function withExclusion(
+  current: ExcludedUnitIds,
+  unitId: UnitId,
+  excluded: boolean,
+): ExcludedUnitIds {
+  const next = new Set(current);
+
+  // The unit's parameters are untouched, so restoring it brings back whatever
+  // values it holds now rather than the ones it had when it was excluded.
+  if (excluded) {
+    next.add(unitId);
+  } else {
+    next.delete(unitId);
+  }
+
+  return next;
+}

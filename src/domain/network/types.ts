@@ -2,7 +2,7 @@ import type { ActivationSelection } from '../activation/activation';
 
 /** Anything a connection can read from: the scalar input, or a hidden unit. */
 export type NodeId = string;
-type LayerId = string;
+export type LayerId = string;
 export type UnitId = string;
 
 // The scalar network input is the only source the first hidden layer reads, so
@@ -26,7 +26,7 @@ export interface HiddenLayer {
   readonly activation: ActivationSelection;
 }
 
-interface OutputPhi {
+export interface OutputPhi {
   readonly sourceId: UnitId;
   readonly value: number;
 }

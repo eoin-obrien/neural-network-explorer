@@ -2,11 +2,16 @@
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
-    // ESNext.Float16 is required only because skipLibCheck is off and type-fest
-    // (a transitive dependency) declares Float16Array; ESNext.Collection likewise
-    // backs the Set methods Mantine Hooks declares.
-    "lib": ["ES2024", "ESNext.Collection", "ESNext.Float16", "DOM", "DOM.Iterable"],
+    "lib": ["ES2024", "DOM", "DOM.Iterable"],
     "jsx": "react-jsx",
+    // Mantine Charts pulls in Recharts, whose transitive @reduxjs/toolkit ships
+    // declarations that are not written for exactOptionalPropertyTypes: six
+    // errors, every one inside node_modules and none in this source tree, on
+    // both the resolved 2.9.0 and the latest 2.12.0. The choice is between
+    // checking other people's declarations and having charts at all.
+    // Application code keeps every strict flag, exactOptionalPropertyTypes
+    // included. See CONTRIBUTING.md.
+    "skipLibCheck": true,
     // vite/client declares the CSS side-effect imports required by
     // noUncheckedSideEffectImports.
     "types": ["vite/client"]
