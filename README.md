@@ -8,10 +8,19 @@ Production site: <https://nn.eoin.ai>
 
 ## Status
 
-Gate 0 — constrained scaffold. The quality gates, build, and deployment pipeline
-are in place; no neural-network functionality is implemented yet. The gate plan
-lives in [IMPLEMENTATION.md](IMPLEMENTATION.md) and the architectural rules in
-[CLAUDE.md](CLAUDE.md).
+Gate 3 — the shallow teaching view. The dense network engine, the exploration
+state, and the first teaching view are in place: a scalar input `x`, one hidden
+layer of three ReLU units, editable `theta` and `phi`, per-unit plots of `z` and
+`h`, the output `y(x)`, a keyboard-operable probe, and unit exclusion.
+
+The engine is not shallow. Width, depth, and activation are read from preset
+data, so a preset with five units renders five cards and a preset with two
+hidden layers renders two strips, with no change to the layout.
+
+Still to come: synchronized hover and mathematical tooltips (Gate 4), the
+reachable scale mode and motion polish (Gate 5), and domain mutation testing.
+The gate plan lives in [IMPLEMENTATION.md](IMPLEMENTATION.md) and the
+architectural rules in [CLAUDE.md](CLAUDE.md).
 
 ## Notation
 
@@ -27,6 +36,10 @@ Learning_ throughout its code, tests, and interface.
 | Hidden-layer parameters | theta  | `theta` |
 | Output-layer parameters | phi    | `phi`   |
 | Network output          | y      | `y`     |
+
+A single hidden layer writes its parameters as Prince writes a shallow network:
+`θ₁₀`, `θ₁₁`, `z₁`, `h₁`. Add depth and the layer index appears, `θ₂₁₁` and
+`z₂₁`, because unit 1 of layer 1 and unit 1 of layer 2 are different units.
 
 ## Requirements
 
@@ -71,6 +84,10 @@ presentation    React, Mantine, chart adapters, visual interaction state
 ```
 
 The direction is enforced by Dependency Cruiser, not only by convention.
+
+Excluding a unit is an exploration intervention, not a parameter: the unit keeps
+every `theta` it had, still computes and plots its own `z` and `h`, and supplies
+zero to whatever reads it downstream.
 
 ## Deployment
 
