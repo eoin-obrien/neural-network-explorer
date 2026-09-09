@@ -23,6 +23,10 @@ function slider(name: string): HTMLElement {
   return screen.getByRole('slider', { name });
 }
 
+function accessibleName(element: HTMLElement): string {
+  return element.getAttribute('aria-label') ?? '';
+}
+
 test('the header reports the architecture and the trainable parameter count', () => {
   renderExplorer();
 
@@ -48,6 +52,23 @@ test('the probe reports the forward pass at x = 0', () => {
   expect(screen.getByText('z₃ = -0.90 → h₃ = 0.00')).toBeDefined();
   // y = -0.40 + 0.9 * 0.40
   expect(screen.getByText('y = -0.04')).toBeDefined();
+});
+
+// Every plot is named for the function it draws and for the coordinate it draws
+// it against, so the shared horizontal axis is part of the stated contract
+// rather than an accident of how the charts happen to be configured.
+test('every stage of the forward pass is a named plot against the original x', () => {
+  renderExplorer();
+
+  expect(screen.getAllByRole('figure').map(accessibleName)).toStrictEqual([
+    'z₁ against x',
+    'h₁ against x',
+    'z₂ against x',
+    'h₂ against x',
+    'z₃ against x',
+    'h₃ against x',
+    'y against x',
+  ]);
 });
 
 test('every parameter of every unit has an accessible mathematical name', () => {

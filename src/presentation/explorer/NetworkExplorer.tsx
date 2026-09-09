@@ -30,6 +30,7 @@ export function NetworkExplorer({ preset }: NetworkExplorerProps): ReactElement 
 
   const view: UnitView = {
     samples,
+    probe,
     xDomain: preset.xDomain,
     fixedScale: preset.fixedScale,
     excludedUnitIds,

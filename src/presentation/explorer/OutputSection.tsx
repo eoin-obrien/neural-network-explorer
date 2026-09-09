@@ -38,10 +38,12 @@ export function OutputSection({
           <Stack gap="xs" flex={1} miw={0}>
             <FunctionChart
               rows={outputRows(samples)}
+              // The probe is the same function at one x, shaped by the same adapter.
+              probeRows={outputRows([probe])}
               xDomain={xDomain}
               valueRange={fixedScale.y}
               color="indigo.7"
-              label="y"
+              name="y"
               height={220}
             />
             <ParameterSlider

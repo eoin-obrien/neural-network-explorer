@@ -1,4 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
+import type { Page } from '@playwright/test';
 import { expect, test } from '@playwright/test';
 
 test('renders the default preset with its architecture and parameter count', async ({ page }) => {
@@ -65,6 +66,35 @@ test('the probe is keyboard operable and reports the forward pass', async ({ pag
   await expect(page.getByText('z₁ = 0.56 → h₁ = 0.56')).toBeVisible();
 });
 
+// Synchronized hover is the integration that unit tests cannot reach: it lives
+// in chart geometry and Recharts' synchronization, not in our own functions.
+test('hovering one plot inspects the same x across the whole forward pass', async ({ page }) => {
+  await page.goto('/');
+
+  await page.getByRole('figure', { name: 'z₁ against x' }).hover();
+
+  const hovered = await inspectedInput(page, 'z₁');
+
+  expect(hovered).toMatch(/^-?\d\.\d\d$/);
+  // Neither of these was hovered; both are reporting the hovered sample.
+  expect(await inspectedInput(page, 'h₃')).toBe(hovered);
+  expect(await inspectedInput(page, 'y')).toBe(hovered);
+});
+
+test('the tooltip states the mathematics rather than a chart series', async ({ page }) => {
+  await page.goto('/');
+
+  await page.getByRole('figure', { name: 'y against x' }).hover();
+
+  await expect(page.getByText(/^y\(-?\d\.\d\d\) = -?\d\.\d\d$/)).toBeVisible();
+});
+
+test('a plot reports nothing until it is inspected', async ({ page }) => {
+  await page.goto('/');
+
+  await expect(page.getByText(/^y\(/)).toHaveCount(0);
+});
+
 test('reset restores the preset', async ({ page }) => {
   await page.goto('/');
 
@@ -91,6 +121,13 @@ test.describe('the unit strip keeps its card width', () => {
     });
   }
 });
+
+/** The x a plot's tooltip is currently reporting, read out of its statement. */
+async function inspectedInput(page: Page, name: string): Promise<string | undefined> {
+  const statement = await page.getByText(new RegExp(`^${name}\\(`)).textContent();
+
+  return /\((-?\d+\.\d+)\)/.exec(statement ?? '')?.[1];
+}
 
 test('has no serious accessibility violations', async ({ page }) => {
   await page.goto('/');

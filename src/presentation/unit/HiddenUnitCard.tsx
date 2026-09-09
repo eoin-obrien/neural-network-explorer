@@ -1,12 +1,10 @@
 import { Card, Group, Stack, Switch, Text } from '@mantine/core';
 import type { ReactElement } from 'react';
 
-import { unitRows } from '../charts/chartRows';
-import { FunctionChart } from '../charts/FunctionChart';
-import { subscript } from '../notation/notation';
 import classes from './HiddenUnitCard.module.css';
 import type { UnitCardModel } from './unitCards';
 import { UnitParameters } from './UnitParameters';
+import { UnitPlots } from './UnitPlots';
 import type { UnitView } from './unitView';
 
 interface HiddenUnitCardProps {
@@ -14,12 +12,8 @@ interface HiddenUnitCardProps {
   readonly view: UnitView;
 }
 
-const chartHeight = 96;
-
 export function HiddenUnitCard({ card, view }: HiddenUnitCardProps): ReactElement {
   const excluded = view.excludedUnitIds.has(card.unitId);
-  const rows = unitRows(view.samples, card.unitId);
-  const index = subscript([card.number]);
 
   return (
     <Card
@@ -63,30 +57,7 @@ export function HiddenUnitCard({ card, view }: HiddenUnitCardProps): ReactElemen
           </Text>
         ) : null}
 
-        <Text size="xs" ff="monospace">
-          {card.zEquation}
-        </Text>
-        <FunctionChart
-          rows={rows.z}
-          xDomain={view.xDomain}
-          valueRange={view.fixedScale.z}
-          color="gray.7"
-          label={`z${index}`}
-          height={chartHeight}
-        />
-
-        <Text size="xs" ff="monospace">
-          {card.hEquation}
-        </Text>
-        <FunctionChart
-          rows={rows.h}
-          xDomain={view.xDomain}
-          valueRange={view.fixedScale.h}
-          color="blue.6"
-          label={`h${index}`}
-          height={chartHeight}
-        />
-
+        <UnitPlots card={card} view={view} />
         <UnitParameters card={card} dispatch={view.dispatch} />
       </Stack>
     </Card>
