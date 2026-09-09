@@ -6,9 +6,11 @@ test('a[0] is one half', () => {
   expect(sigmoid(0)).toBe(0.5);
 });
 
-// Beyond roughly |z| = 37 the logistic curve saturates to exactly 0 or 1 in
-// double precision, so the strict bound is asserted over representative inputs
-// rather than claimed for every finite z.
+// The logistic curve saturates asymmetrically in double precision: it reaches
+// exactly 1 near z = 37, where exp(-z) becomes negligible against 1, but does
+// not reach exactly 0 until z is near -710, where exp(-z) overflows. So the
+// strict bound is asserted over representative inputs rather than claimed for
+// every finite z.
 test('a[z] lies strictly between 0 and 1 over representative inputs', () => {
   for (const z of [-16, -1, -0.001, 0, 0.001, 1, 16]) {
     expect(sigmoid(z)).toBeGreaterThan(0);
