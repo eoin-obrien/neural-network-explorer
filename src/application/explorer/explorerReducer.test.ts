@@ -118,6 +118,18 @@ test('excluding and restoring a unit leaves the network untouched', () => {
   expect(restored.network).toBe(initial.network);
 });
 
+test('the axis starts on the stable teaching scale', () => {
+  expect(initial.scaleMode).toBe('fixed');
+});
+
+// Rescaling an axis is a way of looking at the network, not a parameter of it.
+test('switching the scale mode leaves the network and the probe alone', () => {
+  const next = explorerReducer(initial, { type: 'setScaleMode', mode: 'reachable' });
+
+  expect(next).toStrictEqual({ ...initial, scaleMode: 'reachable' });
+  expect(next.network).toBe(initial.network);
+});
+
 test('moving the probe changes nothing else', () => {
   const next = explorerReducer(initial, { type: 'setProbeX', value: -0.5 });
 
@@ -129,6 +141,7 @@ test('reset returns exactly to the preset state', () => {
     { type: 'setPhi0', value: 3 },
     { type: 'setProbeX', value: -1 },
     { type: 'setUnitExcluded', unitId: 'a', excluded: true },
+    { type: 'setScaleMode', mode: 'reachable' },
   ];
 
   const changed = edits.reduce(explorerReducer, initial);

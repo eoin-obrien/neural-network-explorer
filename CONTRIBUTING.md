@@ -95,11 +95,9 @@ These are decisions, not oversights. Revisit them rather than copying them.
   dependency tree — Redux Toolkit, Immer, `es-toolkit`, and the d3 modules
   behind `victory-vendor` — account for essentially all of it. The budget was
   re-measured, not estimated; treat any further increase the same way.
-- **`knip --production` reports `reachableRange` as unused.** It is Gate 1 work
-  whose consumer is the reachable scale mode at Gate 5; Gate 3 ships the fixed
-  teaching scale only. `src/testSetup.ts` is likewise reported, because it is
-  the test harness and `--production` excludes test entries. Plain `pnpm knip`,
-  which is what CI runs, is clean.
+- **`knip --production` reports `src/testSetup.ts` as unused.** It is the test
+  harness, and `--production` excludes test entries. Plain `pnpm knip`, which is
+  what CI runs, is clean.
 
 ## Licence obligations
 

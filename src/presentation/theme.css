@@ -10,3 +10,34 @@
   /* Blue 6 as a link on white is 3.6:1, below the same 4.5:1 threshold. */
   --mantine-color-anchor: var(--mantine-color-blue-8);
 }
+
+/*
+ * One budget for every discrete transition in the application. It sits in the
+ * 120-180 ms band that reads as feedback rather than as animation: long enough
+ * to carry an element's identity from one state to the next, short enough that
+ * nobody waits for it.
+ */
+:root {
+  --nne-transition-duration: 150ms;
+  --nne-transition-easing: ease;
+}
+
+/*
+ * Reduced motion is honoured once, for the whole document, rather than
+ * component by component, so a transition added later cannot forget to. Mantine
+ * covers its own components through respectReducedMotion; this covers ours and
+ * anything a dependency ships.
+ *
+ * Nothing here needs motion to be understood: every state change is also stated
+ * in text, so removing the motion removes nothing a learner has to read.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import { expect, test } from '@playwright/test';
 
 test('renders the default preset with its architecture and parameter count', async ({ page }) => {
@@ -95,6 +95,61 @@ test('a plot reports nothing until it is inspected', async ({ page }) => {
   await expect(page.getByText(/^y\(/)).toHaveCount(0);
 });
 
+// The axis is redrawn by Recharts from a domain our own policy chose, so the
+// tick labels are the only place the two halves are seen to agree.
+test('switching to reachable scaling redraws the value axis', async ({ page }) => {
+  await page.goto('/');
+
+  const plot = page.getByRole('figure', { name: 'z₁ against x' });
+  await expect(plot.getByText('3.00', { exact: true })).toBeVisible();
+
+  await scaleMode(page, 'Reachable').click();
+
+  await expect(page.getByText('Axes from the values reached over x')).toBeVisible();
+  await expect(plot.getByText('2.25', { exact: true })).toBeVisible();
+  await expect(plot.getByText('3.00', { exact: true })).toHaveCount(0);
+  // The horizontal axis is untouched: reachable scaling is a value-axis policy,
+  // and x still runs over the preset's own input domain.
+  await expect(plot.getByText('-1', { exact: true })).toBeVisible();
+  await expect(page.getByText('z₁ = 0.40 → h₁ = 0.40')).toBeVisible();
+});
+
+test('reachable scaling stays usable while a slider moves', async ({ page }) => {
+  await page.goto('/');
+
+  await scaleMode(page, 'Reachable').click();
+  await page.getByRole('slider', { name: 'θ₁₀ — intercept' }).press('ArrowRight');
+
+  await expect(page.getByText('z₁ = 0.45 → h₁ = 0.45')).toBeVisible();
+  await expect(page.getByRole('figure', { name: 'z₁ against x' })).toBeVisible();
+});
+
+test('a discrete transition stays inside the motion budget', async ({ page }) => {
+  await page.goto('/');
+
+  const duration = await cardTransitionSeconds(page);
+
+  expect(duration).toBeGreaterThanOrEqual(0.12);
+  expect(duration).toBeLessThanOrEqual(0.18);
+});
+
+test.describe('with reduced motion requested', () => {
+  test.use({ reducedMotion: 'reduce' });
+
+  test('motion is removed and every change is still stated', async ({ page }) => {
+    await page.goto('/');
+
+    expect(await cardTransitionSeconds(page)).toBeLessThan(0.01);
+
+    await page.getByRole('switch', { name: 'Neuron 1 included' }).click();
+    await expect(page.getByText('Excluded from the output')).toBeVisible();
+    await expect(page.getByText('y = -0.40')).toBeVisible();
+
+    await scaleMode(page, 'Reachable').click();
+    await expect(page.getByText('Axes from the values reached over x')).toBeVisible();
+  });
+});
+
 test('reset restores the preset', async ({ page }) => {
   await page.goto('/');
 
@@ -121,6 +176,20 @@ test.describe('the unit strip keeps its card width', () => {
     });
   }
 });
+
+/** The scale control's option, clicked by its label as a pointer would. */
+function scaleMode(page: Page, label: string): Locator {
+  return page.getByRole('radiogroup', { name: 'Chart scale' }).getByText(label, { exact: true });
+}
+
+/** How long a unit card takes to settle into its included/excluded state. */
+async function cardTransitionSeconds(page: Page): Promise<number> {
+  const duration = await page
+    .getByRole('article', { name: 'Neuron 1' })
+    .evaluate((card) => getComputedStyle(card).transitionDuration);
+
+  return Number.parseFloat(duration);
+}
 
 /** The x a plot's tooltip is currently reporting, read out of its statement. */
 async function inspectedInput(page: Page, name: string): Promise<string | undefined> {
