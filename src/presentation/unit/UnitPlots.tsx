@@ -35,7 +35,7 @@ export function UnitPlots({ card, view }: UnitPlotsProps): ReactElement {
         rows={rows.z}
         probeRows={probeRows.z}
         xDomain={view.xDomain}
-        valueRange={view.fixedScale.z}
+        valueRange={view.scale.z}
         color="gray.7"
         name={`z${index}`}
         height={chartHeight}
@@ -48,7 +48,7 @@ export function UnitPlots({ card, view }: UnitPlotsProps): ReactElement {
         rows={rows.h}
         probeRows={probeRows.h}
         xDomain={view.xDomain}
-        valueRange={view.fixedScale.h}
+        valueRange={view.scale.h}
         color="blue.6"
         name={`h${index}`}
         height={chartHeight}

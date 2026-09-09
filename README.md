@@ -8,7 +8,7 @@ Production site: <https://nn.eoin.ai>
 
 ## Status
 
-Gate 4 — charts and synchronized inspection. The dense network engine, the
+Gate 5 — reachable scaling and restrained motion. The dense network engine, the
 exploration state, and the first teaching view are in place: a scalar input `x`,
 one hidden layer of three ReLU units, editable `theta` and `phi`, per-unit plots
 of `z` and `h`, the output `y(x)`, and unit exclusion.
@@ -20,13 +20,26 @@ keyboard-operable probe is separate from that ephemeral hover — it is marked o
 every curve and reported as a forward-pass summary in text, so nothing has to be
 pointed at to be read.
 
+Axis scaling is a stated policy rather than a chart-library default. The fixed
+teaching scale keeps the axes still so magnitude changes stay comparable while
+the sliders move; reachable scaling derives them from the values the network
+actually reaches over `x`, sharing one `z` range and one `h` range across each
+layer so the cards beside each other remain comparable, and deriving the output
+axis from sampled `y(x)`. Both change the value axis only — every plot keeps the
+original `x` horizontally, so one probe still means one input everywhere.
+
+Motion is used only where it carries an element's identity from one state to the
+next, within a 120-180 ms budget, and `prefers-reduced-motion` removes it
+document-wide. Nothing has to move to be understood: charts rescale immediately
+rather than morphing, and every state change is also stated in text.
+
 The engine is not shallow. Width, depth, and activation are read from preset
 data, so a preset with five units renders five cards and a preset with two
 hidden layers renders two strips, with no change to the layout.
 
-Still to come: the reachable scale mode and motion polish (Gate 5), and domain
-mutation testing. The gate plan lives in [IMPLEMENTATION.md](IMPLEMENTATION.md) and the
-architectural rules in [CLAUDE.md](CLAUDE.md).
+Still to come: teaching polish (Gate 6) and domain mutation testing. The gate
+plan lives in [IMPLEMENTATION.md](IMPLEMENTATION.md) and the architectural rules
+in [CLAUDE.md](CLAUDE.md).
 
 ## Notation
 

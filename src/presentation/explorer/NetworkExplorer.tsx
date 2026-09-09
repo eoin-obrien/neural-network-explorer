@@ -1,4 +1,4 @@
-import { Container, Group, Stack } from '@mantine/core';
+import { Container, Stack } from '@mantine/core';
 import type { ReactElement } from 'react';
 import { useReducer } from 'react';
 
@@ -7,8 +7,9 @@ import { initialExplorerState } from '../../application/explorer/explorerState';
 import type { Preset } from '../../application/presets/preset';
 import { evaluateNetwork } from '../../domain/network/evaluateNetwork';
 import { sampleNetwork } from '../../domain/network/sampleNetwork';
-import { ActivationControl } from '../controls/ActivationControl';
-import { ProbeControl } from '../controls/ProbeControl';
+import type { LayerId } from '../../domain/network/types';
+import { layerScale, outputScale } from '../charts/chartScale';
+import { ExplorerControls } from '../controls/ExplorerControls';
 import { layerCards } from '../unit/unitCards';
 import type { UnitView } from '../unit/unitView';
 import { NetworkHeader } from './NetworkHeader';
@@ -21,21 +22,21 @@ interface NetworkExplorerProps {
 
 export function NetworkExplorer({ preset }: NetworkExplorerProps): ReactElement {
   const [state, dispatch] = useReducer(explorerReducer, preset, initialExplorerState);
-  const { network, probeX, excludedUnitIds } = state;
+  const { network, probeX, excludedUnitIds, scaleMode } = state;
 
-  // Derived, never stored: the plotted function and the probe are recomputed
-  // from the canonical network on every render.
+  // Derived, never stored: the plotted function, the probe and the axis ranges
+  // are all recomputed from the canonical network on every render.
   const samples = sampleNetwork(network, preset.xDomain, excludedUnitIds);
   const probe = evaluateNetwork(network, probeX, excludedUnitIds);
 
-  const view: UnitView = {
+  const view = (layerId: LayerId): UnitView => ({
     samples,
     probe,
     xDomain: preset.xDomain,
-    fixedScale: preset.fixedScale,
+    scale: layerScale(scaleMode, preset.fixedScale, samples, layerId),
     excludedUnitIds,
     dispatch,
-  };
+  });
 
   return (
     <Container component="main" size="xl" py="md">
@@ -47,35 +48,22 @@ export function NetworkExplorer({ preset }: NetworkExplorerProps): ReactElement 
             dispatch({ type: 'reset', preset });
           }}
         />
-        <Group gap="lg" align="flex-start">
-          {/* One selector applies to every hidden layer in this view; the
-              first layer's selection is what it displays. */}
-          {network.hiddenLayers.slice(0, 1).map((layer) => (
-            <ActivationControl
-              key={layer.id}
-              selection={layer.activation}
-              onChange={(selection) => {
-                dispatch({ type: 'setActivation', selection });
-              }}
-            />
-          ))}
-          <ProbeControl
-            probeX={probeX}
-            xDomain={preset.xDomain}
-            onChange={(value) => {
-              dispatch({ type: 'setProbeX', value });
-            }}
-          />
-        </Group>
+        <ExplorerControls
+          network={network}
+          probeX={probeX}
+          xDomain={preset.xDomain}
+          scaleMode={scaleMode}
+          dispatch={dispatch}
+        />
         {layerCards(network).map((layer) => (
-          <UnitStrip key={layer.layerId} layer={layer} view={view} />
+          <UnitStrip key={layer.layerId} layer={layer} view={view(layer.layerId)} />
         ))}
         <OutputSection
           output={network.output}
           samples={samples}
           probe={probe}
           xDomain={preset.xDomain}
-          fixedScale={preset.fixedScale}
+          valueRange={outputScale(scaleMode, preset.fixedScale, samples)}
           dispatch={dispatch}
         />
       </Stack>

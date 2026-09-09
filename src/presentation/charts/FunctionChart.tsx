@@ -1,5 +1,5 @@
 import { LineChart } from '@mantine/charts';
-import { Box } from '@mantine/core';
+import { Box, VisuallyHidden } from '@mantine/core';
 import type { ReactElement } from 'react';
 
 import type { XDomain } from '../../domain/network/types';
@@ -50,10 +50,10 @@ export function FunctionChart({
         // The horizontal axis stays the original scalar input at every stage of
         // the forward pass, so one x means the same thing in every chart.
         xAxisProps={{ type: 'number', domain: [xDomain[0], xDomain[1]], tickCount: 5 }}
-        // Fixed teaching scale: the preset chooses the axis so magnitude changes
-        // stay comparable instead of the axis chasing the line. The ticks are the
-        // ends and the midpoint rather than a count, because a count lets Recharts
-        // drop whichever labels do not fit and leaves a lopsided axis.
+        // The value axis, chosen by the scale policy rather than by Recharts.
+        // The ticks are the ends and the midpoint rather than a count, because a
+        // count lets Recharts drop whichever labels do not fit and leaves a
+        // lopsided axis.
         yAxisProps={{
           domain: [valueRange.min, valueRange.max],
           ticks: [valueRange.min, (valueRange.min + valueRange.max) / 2, valueRange.max],
@@ -73,12 +73,22 @@ export function FunctionChart({
         curveType="linear"
         withDots={false}
         // Sliders emit a continuous stream of values; an animation per event
-        // would leave the plotted function trailing behind the control.
+        // would queue up and leave the plotted function trailing behind the
+        // control. The same reasoning applies to the hover read-out, which has
+        // to keep up with the pointer.
         lineProps={{ isAnimationActive: false }}
+        tooltipAnimationDuration={0}
         valueFormatter={formatValue}
         strokeWidth={2}
         gridAxis="xy"
       />
+      {/* What the value axis currently spans, as text. Switching the scale is
+          then perceivable without reading tick labels off a small chart, and
+          without the plot's own name changing under a screen reader as the
+          reachable range follows the sliders. */}
+      <VisuallyHidden component="figcaption">
+        {`${name} from ${formatValue(valueRange.min)} to ${formatValue(valueRange.max)}`}
+      </VisuallyHidden>
     </Box>
   );
 }

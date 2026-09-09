@@ -1,6 +1,6 @@
 import type { ExcludedUnitIds, UnitId } from '../../domain/network/types';
 import type { Preset } from '../presets/preset';
-import type { ExplorerState } from './explorerState';
+import type { ExplorerState, ScaleMode } from './explorerState';
 import { initialExplorerState } from './explorerState';
 import type { NetworkAction } from './updateNetwork';
 import { updateNetwork } from './updateNetwork';
@@ -9,6 +9,7 @@ import { updateNetwork } from './updateNetwork';
 type ExplorationAction =
   | { readonly type: 'setProbeX'; readonly value: number }
   | { readonly type: 'setUnitExcluded'; readonly unitId: UnitId; readonly excluded: boolean }
+  | { readonly type: 'setScaleMode'; readonly mode: ScaleMode }
   | { readonly type: 'reset'; readonly preset: Preset };
 
 export type ExplorerAction = NetworkAction | ExplorationAction;
@@ -26,7 +27,10 @@ export function explorerReducer(state: ExplorerState, action: ExplorerAction): E
 
 function isExplorationAction(action: ExplorerAction): action is ExplorationAction {
   return (
-    action.type === 'reset' || action.type === 'setProbeX' || action.type === 'setUnitExcluded'
+    action.type === 'reset' ||
+    action.type === 'setProbeX' ||
+    action.type === 'setUnitExcluded' ||
+    action.type === 'setScaleMode'
   );
 }
 
@@ -36,6 +40,8 @@ function updateExploration(state: ExplorerState, action: ExplorationAction): Exp
       return initialExplorerState(action.preset);
     case 'setProbeX':
       return { ...state, probeX: action.value };
+    case 'setScaleMode':
+      return { ...state, scaleMode: action.mode };
     case 'setUnitExcluded':
       return {
         ...state,

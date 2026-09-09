@@ -2,8 +2,8 @@ import { Card, Group, Stack, Text } from '@mantine/core';
 import type { Dispatch, ReactElement } from 'react';
 
 import type { ExplorerAction } from '../../application/explorer/explorerReducer';
-import type { FixedScale } from '../../application/presets/preset';
 import type { NetworkEvaluation, OutputLayer, XDomain } from '../../domain/network/types';
+import type { ValueRange } from '../../domain/range/reachableRange';
 import { outputRows } from '../charts/chartRows';
 import { FunctionChart } from '../charts/FunctionChart';
 import { ParameterSlider } from '../controls/ParameterSlider';
@@ -15,7 +15,7 @@ interface OutputSectionProps {
   readonly samples: readonly NetworkEvaluation[];
   readonly probe: NetworkEvaluation;
   readonly xDomain: XDomain;
-  readonly fixedScale: FixedScale;
+  readonly valueRange: ValueRange;
   readonly dispatch: Dispatch<ExplorerAction>;
 }
 
@@ -24,7 +24,7 @@ export function OutputSection({
   samples,
   probe,
   xDomain,
-  fixedScale,
+  valueRange,
   dispatch,
 }: OutputSectionProps): ReactElement {
   return (
@@ -41,7 +41,7 @@ export function OutputSection({
               // The probe is the same function at one x, shaped by the same adapter.
               probeRows={outputRows([probe])}
               xDomain={xDomain}
-              valueRange={fixedScale.y}
+              valueRange={valueRange}
               color="indigo.7"
               name="y"
               height={220}

@@ -1,14 +1,13 @@
+/*
+ * Including or excluding a unit changes one card among several, so the muting
+ * transitions rather than snapping: the eye keeps hold of which card moved.
+ * The state itself is carried by the label and the muting, never by the motion,
+ * which the document-wide reduced-motion rule is free to remove.
+ */
 .card {
-  transition: opacity 150ms ease;
+  transition: opacity var(--nne-transition-duration) var(--nne-transition-easing);
 }
 
 .excluded {
   opacity: 0.55;
-}
-
-/* The excluded state is carried by the label and the muting, never by motion. */
-@media (prefers-reduced-motion: reduce) {
-  .card {
-    transition: none;
-  }
 }
