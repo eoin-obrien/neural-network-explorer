@@ -8,18 +8,24 @@ Production site: <https://nn.eoin.ai>
 
 ## Status
 
-Gate 3 — the shallow teaching view. The dense network engine, the exploration
-state, and the first teaching view are in place: a scalar input `x`, one hidden
-layer of three ReLU units, editable `theta` and `phi`, per-unit plots of `z` and
-`h`, the output `y(x)`, a keyboard-operable probe, and unit exclusion.
+Gate 4 — charts and synchronized inspection. The dense network engine, the
+exploration state, and the first teaching view are in place: a scalar input `x`,
+one hidden layer of three ReLU units, editable `theta` and `phi`, per-unit plots
+of `z` and `h`, the output `y(x)`, and unit exclusion.
+
+Every plot is drawn from one shared set of sampled `x` positions and keeps that
+original `x` on its horizontal axis, so a hover anywhere reports the same input
+everywhere and each plot states it as mathematics: `z₁(0.25) = 0.80`. The
+keyboard-operable probe is separate from that ephemeral hover — it is marked on
+every curve and reported as a forward-pass summary in text, so nothing has to be
+pointed at to be read.
 
 The engine is not shallow. Width, depth, and activation are read from preset
 data, so a preset with five units renders five cards and a preset with two
 hidden layers renders two strips, with no change to the layout.
 
-Still to come: synchronized hover and mathematical tooltips (Gate 4), the
-reachable scale mode and motion polish (Gate 5), and domain mutation testing.
-The gate plan lives in [IMPLEMENTATION.md](IMPLEMENTATION.md) and the
+Still to come: the reachable scale mode and motion polish (Gate 5), and domain
+mutation testing. The gate plan lives in [IMPLEMENTATION.md](IMPLEMENTATION.md) and the
 architectural rules in [CLAUDE.md](CLAUDE.md).
 
 ## Notation
