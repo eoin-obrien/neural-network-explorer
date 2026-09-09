@@ -48,11 +48,18 @@ Subjects are limited to 72 characters. Scopes name a concept — `domain`,
 
 These are decisions, not oversights. Revisit them rather than copying them.
 
-- **TypeScript 5.9.3, not 6.x.** There is no stable TypeScript 6 release; the
-  only published 6.x artifact is a beta. `typescript-eslint` supports
-  `>=4.8.4 <6.1.0`, so TypeScript 7 would cost type-aware linting, which is a
-  hard requirement. 5.9.3 supports every compiler option this repository
-  demands, including `erasableSyntaxOnly`.
+- **TypeScript 5.9.3, not 6.x.** TypeScript 6.0.3 is released and is inside
+  `typescript-eslint`'s supported range (`>=4.8.4 <6.1.0`), so the blocker is
+  not availability. It is Mantine: under TypeScript 6 the declaration files
+  `@mantine/core` 9.6.0 ships fail with `TS2320` across roughly twenty input
+  components, because `__BaseInputProps` and `ElementProps` disagree on
+  `disabled`. None of that is this repository's code — the errors surface only
+  because the application project deliberately keeps `skipLibCheck: false`, and
+  turning that off to buy a version bump would trade a real guarantee for a
+  cosmetic one. Revisit when Mantine publishes TypeScript 6 compatible types.
+  TypeScript 7 is a separate matter: `latest` is already 7.x, and it falls
+  outside `typescript-eslint`'s range, so it would cost type-aware linting,
+  which is a hard requirement.
 - **`skipLibCheck` is `false` for the application project only.** Vite and
   Vitest publish `.d.ts` files that do not survive
   `exactOptionalPropertyTypes`, and one references a module pnpm does not
