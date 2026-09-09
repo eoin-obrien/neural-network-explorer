@@ -1,3 +1,4 @@
+import comments from '@eslint-community/eslint-plugin-eslint-comments';
 import js from '@eslint/js';
 import vitest from '@vitest/eslint-plugin';
 import functional from 'eslint-plugin-functional';
@@ -19,6 +20,16 @@ export default tseslint.config(
   js.configs.recommended,
   tseslint.configs.strictTypeChecked,
   tseslint.configs.stylisticTypeChecked,
+
+  // A suppression must say why it exists: `-- reason`. Unused suppressions are
+  // already reported by ESLint's default directive checking, which `pnpm lint`
+  // turns into a failure via --max-warnings=0.
+  {
+    plugins: { '@eslint-community/eslint-comments': comments },
+    rules: {
+      '@eslint-community/eslint-comments/require-description': 'error',
+    },
+  },
 
   {
     languageOptions: {

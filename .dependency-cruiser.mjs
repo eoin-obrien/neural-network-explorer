@@ -42,6 +42,18 @@ export default {
       to: { path: '^src/presentation/' },
     },
     {
+      name: 'charts-stay-in-presentation',
+      severity: 'error',
+      comment:
+        'Chart-library data shaping is a presentation concern: only presentation may import Mantine Charts or Recharts.',
+      // `to.path` matches the resolved file, not the specifier, so the package
+      // is identified by its node_modules location rather than its import name.
+      from: { path: '^src/', pathNot: '^src/presentation/' },
+      // The bootstrap imports the packaged stylesheet globally; a stylesheet
+      // carries no chart-library types and is not a chart adapter.
+      to: { path: 'node_modules/(@mantine/charts|recharts)/', pathNot: '\\.css$' },
+    },
+    {
       name: 'no-dev-dependencies-in-shipped-code',
       severity: 'error',
       comment: 'Only tests and the test harness may import development dependencies.',
