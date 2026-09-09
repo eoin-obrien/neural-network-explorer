@@ -71,6 +71,13 @@ These are decisions, not oversights. Revisit them rather than copying them.
 - **Mutation testing is not configured yet.** Per IMPLEMENTATION.md it is
   introduced after Gate 2, once there is a mathematical domain to mutate.
 
+## Licence obligations
+
+The project is AGPL-3.0-or-later. Section 13 requires that anyone who interacts
+with a modified version over a network be offered its corresponding source, so
+the deployed interface must carry a visible link to the repository. The Gate 0
+shell has no header yet; add that link when the header lands at Gate 3.
+
 ## Pages and DNS
 
 One-time setup, outside the repository:

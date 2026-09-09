@@ -81,3 +81,11 @@ base is `/` and never `/neural-network-explorer/`.
 Repository settings and DNS are the source of truth for the domain; there is
 deliberately no `CNAME` file in the source tree. See
 [CONTRIBUTING.md](CONTRIBUTING.md) for the one-time setup steps.
+
+## Licence
+
+[GNU Affero General Public License v3.0 or later](LICENSE).
+
+This is teaching material, and the share-alike terms are the point: anyone may
+run, study, and adapt it, but a modified version — including one merely hosted
+for other learners — must be offered back under the same licence.
