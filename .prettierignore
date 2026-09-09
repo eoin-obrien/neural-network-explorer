@@ -1,0 +1,12 @@
+dist/
+coverage/
+playwright-report/
+test-results/
+blob-report/
+pnpm-lock.yaml
+
+# Specification documents. They embed raw LaTeX display math, which is not
+# Markdown: Prettier rewrites a leading "+ \sum ..." into a list bullet and
+# silently corrupts the equations. Their content is frozen reference material.
+CLAUDE.md
+IMPLEMENTATION.md

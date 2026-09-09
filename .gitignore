@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Test and analysis output
+coverage/
+playwright-report/
+test-results/
+blob-report/
+reports/
+.stryker-tmp/
+
+# Tool caches
+.vite/
+.eslintcache
+*.tsbuildinfo
+
+# Local environment
+.env
+.env.*
+!.env.example
+
+# Editor and OS noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json

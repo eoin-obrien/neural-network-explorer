@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    // ESNext.Float16 is required only because skipLibCheck is off and type-fest
+    // (a transitive dependency) declares Float16Array; ESNext.Collection likewise
+    // backs the Set methods Mantine Hooks declares.
+    "lib": ["ES2024", "ESNext.Collection", "ESNext.Float16", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    // vite/client declares the CSS side-effect imports required by
+    // noUncheckedSideEffectImports.
+    "types": ["vite/client"]
+  },
+  "include": ["src"]
+}

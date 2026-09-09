@@ -1,0 +1,20 @@
+# Mathematical vocabulary (Prince, Understanding Deep Learning)
+affine
+phi
+relu
+sigmoid
+tanh
+theta
+
+# Libraries and tooling
+commitlint
+cspell
+knip
+mantine
+markdownlint
+recharts
+vite
+vitest
+
+# Project identity
+eoin

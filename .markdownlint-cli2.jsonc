@@ -1,0 +1,21 @@
+{
+  "globs": ["**/*.md"],
+  "ignores": [
+    "node_modules",
+    "dist",
+    "coverage",
+    "playwright-report",
+    // Specification documents: their raw LaTeX display math parses as setext
+    // headings and list bullets, so Markdown structure rules do not apply.
+    // See .prettierignore for the same exclusion and reason.
+    "CLAUDE.md",
+    "IMPLEMENTATION.md",
+  ],
+  "config": {
+    "default": true,
+    // Prettier owns wrapping; a hard line-length rule would fight it.
+    "MD013": false,
+    // Duplicate headings are legitimate under different parents.
+    "MD024": { "siblings_only": true },
+  },
+}
