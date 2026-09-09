@@ -12,7 +12,13 @@ const paddingFraction = 0.05;
 // A constant or near-constant function has (almost) no span of its own, so
 // padding never falls below this absolute floor. This is what keeps a flat
 // function from collapsing the axis to zero width.
-const minimumPadding = 0.5;
+//
+// The floor is deliberately small. It only has to rescue a function that is
+// already flat: bounded activations such as sigmoid (h in [0, 1]) and tanh
+// (h in [-1, 1]) span less than the padding a larger floor would impose, so a
+// larger value would swamp their axes with empty space and leave reachable
+// scaling looking no different from a fixed teaching scale.
+const minimumPadding = 0.05;
 
 // Used when nothing finite was sampled, so the result is still a usable axis.
 const emptyCentre = 0;
