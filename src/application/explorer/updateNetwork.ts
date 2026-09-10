@@ -1,5 +1,13 @@
 import type { ActivationSelection } from '../../domain/activation/activation';
-import type { HiddenLayer, HiddenUnit, Network, NodeId, UnitId } from '../../domain/network/types';
+import type {
+  HiddenLayer,
+  HiddenUnit,
+  LayerId,
+  Network,
+  NodeId,
+  UnitId,
+} from '../../domain/network/types';
+import { addUnit, removeUnit } from './resizeLayer';
 
 /** Edits to the canonical network: every one of these changes a theta or a phi. */
 export type NetworkAction =
@@ -12,7 +20,11 @@ export type NetworkAction =
     }
   | { readonly type: 'setPhi'; readonly sourceId: UnitId; readonly value: number }
   | { readonly type: 'setPhi0'; readonly value: number }
-  | { readonly type: 'setActivation'; readonly selection: ActivationSelection };
+  | { readonly type: 'setActivation'; readonly selection: ActivationSelection }
+  // Widening a layer writes parameters rather than intervening in the pass, so
+  // it belongs here beside the sliders and not among the exploration actions.
+  | { readonly type: 'addUnit'; readonly layerId: LayerId }
+  | { readonly type: 'removeUnit'; readonly layerId: LayerId };
 
 type ThetaAction = Extract<NetworkAction, { type: 'setThetaBias' | 'setTheta' }>;
 
@@ -43,6 +55,10 @@ export function updateNetwork(network: Network, action: NetworkAction): Network 
       };
     case 'setPhi0':
       return { ...network, output: { ...network.output, phi0: action.value } };
+    case 'addUnit':
+      return addUnit(network, action.layerId);
+    case 'removeUnit':
+      return removeUnit(network, action.layerId);
   }
 }
 
