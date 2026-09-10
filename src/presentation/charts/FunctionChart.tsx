@@ -1,10 +1,12 @@
 import { LineChart } from '@mantine/charts';
 import { Box, VisuallyHidden } from '@mantine/core';
 import type { ReactElement } from 'react';
+import { memo } from 'react';
 
 import type { XDomain } from '../../domain/network/types';
 import type { ValueRange } from '../../domain/range/reachableRange';
 import { formatValue } from '../notation/notation';
+import { samePlot } from './chartEquality';
 import type { ChartRow, TermSeries } from './chartRows';
 import { MathTooltip } from './MathTooltip';
 
@@ -33,7 +35,15 @@ const syncId = 'forward-pass';
 const termColor = 'gray.6';
 const termDash = '4 4';
 
-export function FunctionChart({
+/**
+ * Skipped when this plot would draw exactly what it drew last time. Every
+ * parameter change re-renders the whole explorer, but it moves only the curves
+ * that read the parameter: at eight units that is three plots of seventeen, and
+ * the other fourteen were re-rendering identically.
+ */
+export const FunctionChart = memo(FunctionChartView, samePlot);
+
+function FunctionChartView({
   rows,
   probeRows,
   terms = [],
