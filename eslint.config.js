@@ -14,7 +14,15 @@ const lineBudget = (max) => ['error', { max, skipBlankLines: true, skipComments:
 
 export default tseslint.config(
   {
-    ignores: ['dist/', 'coverage/', 'playwright-report/', 'test-results/', 'blob-report/'],
+    ignores: [
+      'dist/',
+      'coverage/',
+      'playwright-report/',
+      'test-results/',
+      'blob-report/',
+      'reports/',
+      '.stryker-tmp/',
+    ],
   },
 
   js.configs.recommended,

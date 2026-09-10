@@ -48,6 +48,28 @@ test('an asymmetric domain also reaches its exact endpoints', () => {
   expect(samples.at(-1)?.x).toBe(4.7);
 });
 
+// On this domain the two differ: stepping accumulates to 0.10000000000000009,
+// so without the exact endpoint the right-hand end of every plot would sit
+// just outside the domain the preset declares.
+test('the last sample is the exact endpoint, not what stepping accumulates to', () => {
+  const inexact: XDomain = [-1, 0.1];
+  const accumulated = inexact[0] + 160 * ((inexact[1] - inexact[0]) / 160);
+
+  expect(accumulated).not.toBe(inexact[1]);
+  expect(sampleNetwork(network, inexact, none).at(-1)?.x).toBe(inexact[1]);
+});
+
+// Even spacing is what makes one shared set of x positions meaningful: the
+// charts synchronize by row index, so an uneven grid would put different inputs
+// at the same index in different plots.
+test('samples are evenly spaced across the domain', () => {
+  const gaps = gapsOf(sampleNetwork(network, normalized, none).map((sample) => sample.x));
+
+  expect(gaps).toHaveLength(160);
+  // A width of 2 over 160 intervals, rounded past the noise of binary division.
+  expect(new Set(gaps.map((gap) => Number(gap.toFixed(12))))).toStrictEqual(new Set([0.0125]));
+});
+
 test('samples are strictly increasing in x', () => {
   const xs = sampleNetwork(network, normalized, none).map((sample) => sample.x);
 
@@ -75,3 +97,10 @@ test('an exclusion applies to every sample', () => {
     expect(sample.layers.at(0)?.units.at(0)?.downstreamValue).toBe(0);
   }
 });
+
+/** The distance between each pair of neighbouring samples. */
+function gapsOf(xs: readonly number[]): readonly number[] {
+  return xs.flatMap((x, index) =>
+    xs.filter((_, position) => position === index + 1).map((next) => next - x),
+  );
+}
