@@ -1,9 +1,9 @@
-import { Group, Slider, Stack, Text } from '@mantine/core';
+import { Group, Stack, Text } from '@mantine/core';
 import type { ReactElement } from 'react';
 
 import type { XDomain } from '../../domain/network/types';
 import { formatValue } from '../notation/notation';
-import { parameterStep } from './parameterRanges';
+import { StepSlider } from './StepSlider';
 
 interface ProbeControlProps {
   readonly probeX: number;
@@ -22,15 +22,10 @@ export function ProbeControl({ probeX, xDomain, onChange }: ProbeControlProps): 
         Probe x
       </Text>
       <Group gap="xs" wrap="nowrap">
-        <Slider
-          flex={1}
+        <StepSlider
           thumbLabel="x — network input"
           value={probeX}
-          min={xDomain[0]}
-          max={xDomain[1]}
-          step={parameterStep}
-          precision={2}
-          label={null}
+          range={{ min: xDomain[0], max: xDomain[1] }}
           onChange={onChange}
         />
         <Text size="xs" ff="monospace" w={44} ta="right">
