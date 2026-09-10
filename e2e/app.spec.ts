@@ -175,19 +175,25 @@ test.describe('with reduced motion requested', () => {
   });
 });
 
-// The overlay adds a series per unit to a real chart; whether Recharts draws
-// them on the same axes as y is not something jsdom can answer.
+// The overlay adds a series per unit to a real chart; whether those series reach
+// the plot at all is not something jsdom can answer.
+//
+// The drawn lines are counted by the dash this application asks for rather than
+// by a Recharts class name: the dash is our own styling decision, so the
+// assertion survives the chart library renaming its internals.
 test('the output terms can be overlaid on y and taken away again', async ({ page }) => {
   await page.goto('/');
 
   const plot = page.getByRole('figure', { name: 'y against x' });
-  const lines = plot.locator('path.recharts-curve');
-  await expect(lines).toHaveCount(1);
+  const termLines = plot.locator('path[stroke-dasharray="4 4"]');
+  await expect(termLines).toHaveCount(0);
+  await expect(plot.getByText('y from -2.00 to 2.00')).toBeAttached();
 
   await page.getByRole('switch', { name: 'Show φᵢhᵢ terms' }).click();
 
-  // y itself, plus one term for each of the three units.
-  await expect(lines).toHaveCount(4);
+  // One dashed line per unit, and the caption naming the same three terms.
+  await expect(termLines).toHaveCount(3);
+  await expect(plot.getByText('y from -2.00 to 2.00, with terms φ₁h₁, φ₂h₂, φ₃h₃')).toBeAttached();
   await expect(page.getByText('y = -0.04')).toBeVisible();
 });
 
@@ -233,6 +239,29 @@ test('reset restores the preset', async ({ page }) => {
   await page.getByRole('button', { name: 'Reset' }).click();
 
   await expect(page.getByText('y = -0.04')).toBeVisible();
+});
+
+// Width is a parameter change, so the whole forward pass has to follow it: a new
+// card with its own plots, a longer output sum, and a new parameter count.
+test('a layer can be widened and narrowed from the browser', async ({ page }) => {
+  await page.goto('/');
+
+  await expect(page.getByText('1 → 3 ReLU → 1')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Add a neuron to hidden layer 1' }).click();
+
+  await expect(page.getByText('1 → 4 ReLU → 1')).toBeVisible();
+  await expect(page.getByText('13 parameters')).toBeVisible();
+  await expect(page.getByText(/^Neuron \d+$/)).toHaveCount(4);
+  // The new unit plots z₄ and h₄ against the same shared x as the rest.
+  await expect(page.getByRole('figure', { name: 'z₄ against x' })).toBeVisible();
+  await expect(page.getByRole('slider', { name: 'φ₄ — output weight' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Remove a neuron from hidden layer 1' }).click();
+
+  await expect(page.getByText('1 → 3 ReLU → 1')).toBeVisible();
+  await expect(page.getByText('10 parameters')).toBeVisible();
+  await expect(page.getByRole('figure', { name: 'z₄ against x' })).toBeHidden();
 });
 
 // The unit strip must scroll rather than compress its cards into unusable
