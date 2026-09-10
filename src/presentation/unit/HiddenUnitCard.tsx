@@ -18,7 +18,7 @@ export function HiddenUnitCard({ card, view }: HiddenUnitCardProps): ReactElemen
   return (
     <Card
       component="article"
-      aria-label={`Neuron ${String(card.number)}`}
+      aria-label={card.title}
       withBorder
       padding="sm"
       w={300}
@@ -30,13 +30,13 @@ export function HiddenUnitCard({ card, view }: HiddenUnitCardProps): ReactElemen
       <Stack gap="xs">
         <Group justify="space-between" wrap="nowrap">
           <Text fw={600} size="sm">
-            Neuron {card.number}
+            {card.title}
           </Text>
           <Switch
             size="xs"
             labelPosition="left"
             label="Included"
-            aria-label={`Neuron ${String(card.number)} included`}
+            aria-label={`${card.title} included`}
             checked={!excluded}
             onChange={(event) => {
               view.dispatch({

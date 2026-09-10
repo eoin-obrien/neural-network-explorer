@@ -25,7 +25,7 @@ export function NetworkHeader({ title, network, onReset }: NetworkHeaderProps): 
           <Text size="sm" c="dimmed">{`${String(countParameters(network))} parameters`}</Text>
         </Group>
         <Text size="sm" ff="monospace" c="dimmed">
-          {outputEquation(network.output)}
+          {outputEquation(network)}
         </Text>
       </Stack>
       <Group gap="sm" wrap="nowrap">

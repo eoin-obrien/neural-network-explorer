@@ -1,6 +1,6 @@
 import { activationDefinitions } from '../../domain/activation/activation';
-import type { Network, OutputLayer } from '../../domain/network/types';
-import { subscript } from '../notation/notation';
+import type { Network } from '../../domain/network/types';
+import { activationSymbol, subscript } from '../notation/notation';
 
 /** For example `1 → 3 ReLU → 1`: scalar in, each hidden layer, scalar out. */
 export function architectureSummary(network: Network): string {
@@ -15,13 +15,16 @@ export function architectureSummary(network: Network): string {
 // says the same thing.
 const maxExpandedTerms = 5;
 
-export function outputEquation(output: OutputLayer): string {
-  if (output.incomingPhi.length > maxExpandedTerms) {
+export function outputEquation(network: Network): string {
+  if (network.output.incomingPhi.length > maxExpandedTerms) {
     return 'y = φ₀ + Σᵢ φᵢ hᵢ';
   }
 
-  const terms = output.incomingPhi.map(
-    (_, index) => `φ${subscript([index + 1])}h${subscript([index + 1])}`,
+  // The output reads the last hidden layer, so phi_i weights that layer's unit
+  // i: h₁ while the network is shallow, h₂₁ once there is a layer above.
+  const depth = network.hiddenLayers.length;
+  const terms = network.output.incomingPhi.map(
+    (_, index) => `φ${subscript([index + 1])}${activationSymbol(depth, index + 1, depth)}`,
   );
 
   return ['y = φ₀', ...terms].join(' + ');

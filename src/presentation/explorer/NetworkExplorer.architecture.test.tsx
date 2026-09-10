@@ -15,7 +15,14 @@ const fixedScale = {
 };
 
 function presetFor(network: Network): Preset {
-  return { id: 'test', title: 'Test network', network, xDomain: [-1, 1], fixedScale };
+  return {
+    id: 'test',
+    title: 'Test network',
+    lesson: 'A network shaped only to exercise the layout.',
+    network,
+    xDomain: [-1, 1],
+    fixedScale,
+  };
 }
 
 /** The width lives in the data: nothing in the layout knows how many units. */
@@ -103,14 +110,17 @@ test('a two-layer network renders a strip per layer', () => {
   expect(screen.getByText('1 → 2 Identity → 1 Tanh → 1')).toBeDefined();
   // Layer 1: 2 x (bias + weight). Layer 2: bias + 2 weights. Output: phi0 + phi.
   expect(screen.getByText('9 parameters')).toBeDefined();
+  // The output reads the last layer, so its term names that layer's unit.
+  expect(screen.getByText('y = φ₀ + φ₁h₂₁')).toBeDefined();
 });
 
 test('a deeper unit labels its theta by the activation it reads, not as a slope', () => {
   renderPreset(deepNetwork);
 
-  // theta_lij: layer 2, unit 1, reading h_1 and h_2 of layer 1.
-  expect(screen.getByRole('slider', { name: 'θ₂₁₁ — weight on h₁' })).toBeDefined();
-  expect(screen.getByRole('slider', { name: 'θ₂₁₂ — weight on h₂' })).toBeDefined();
+  // theta_lij: layer 2, unit 1, reading h_11 and h_12 — the activations of
+  // layer 1, named the way layer 1's own cards name them.
+  expect(screen.getByRole('slider', { name: 'θ₂₁₁ — weight on h₁₁' })).toBeDefined();
+  expect(screen.getByRole('slider', { name: 'θ₂₁₂ — weight on h₁₂' })).toBeDefined();
   expect(screen.getByRole('slider', { name: 'θ₁₁₁ — slope' })).toBeDefined();
   expect(screen.getByRole('slider', { name: 'θ₁₂₁ — slope' })).toBeDefined();
 });
@@ -126,8 +136,8 @@ test('depth puts the layer index into every symbol', () => {
     'θ₁₂₀ — intercept',
     'θ₁₂₁ — slope',
     'θ₂₁₀ — intercept',
-    'θ₂₁₁ — weight on h₁',
-    'θ₂₁₂ — weight on h₂',
+    'θ₂₁₁ — weight on h₁₁',
+    'θ₂₁₂ — weight on h₁₂',
   ]);
 });
 
@@ -147,8 +157,9 @@ test('a single hidden layer keeps the shallow subscripts', () => {
 test('only the units the output reads carry a phi control', () => {
   renderPreset(deepNetwork);
 
-  // Three units, but the output connects to the last layer alone.
-  expect(screen.getAllByText(/^Neuron \d+$/)).toHaveLength(3);
+  // Three units, but the output connects to the last layer alone. With depth a
+  // card names its layer too: every layer otherwise has a neuron 1.
+  expect(screen.getAllByText(/^Layer \d+ neuron \d+$/)).toHaveLength(3);
   expect(screen.getAllByRole('slider', { name: /output weight$/ })).toHaveLength(1);
 });
 

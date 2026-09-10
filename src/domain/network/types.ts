@@ -60,9 +60,17 @@ export interface LayerEvaluation {
   readonly units: readonly UnitEvaluation[];
 }
 
+/** One term of the output sum: phi_i h_i for the unit the connection reads. */
+export interface OutputContribution {
+  readonly sourceId: UnitId;
+  readonly value: number;
+}
+
 export interface NetworkEvaluation {
   readonly x: number;
   readonly layers: readonly LayerEvaluation[];
+  /** The terms of y, in the order the output connections declare them. */
+  readonly contributions: readonly OutputContribution[];
   readonly y: number;
 }
 

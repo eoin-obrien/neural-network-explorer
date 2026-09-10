@@ -14,14 +14,25 @@ function layer(layerId: string, units: readonly UnitEvaluation[]): LayerEvaluati
 // Two units whose extremes fall in different samples, so a range that read only
 // one unit or only one sample would be visibly wrong.
 const samples: readonly NetworkEvaluation[] = [
-  { x: -1, layers: [layer('hidden-1', [unit('a', -2, 0), unit('b', 1, 1)])], y: -0.5 },
-  { x: 1, layers: [layer('hidden-1', [unit('a', 2, 2), unit('b', -3, 0)])], y: 1.5 },
+  {
+    x: -1,
+    layers: [layer('hidden-1', [unit('a', -2, 0), unit('b', 1, 1)])],
+    contributions: [],
+    y: -0.5,
+  },
+  {
+    x: 1,
+    layers: [layer('hidden-1', [unit('a', 2, 2), unit('b', -3, 0)])],
+    contributions: [],
+    y: 1.5,
+  },
 ];
 
 const deep: readonly NetworkEvaluation[] = [
   {
     x: 0,
     layers: [layer('hidden-1', [unit('a', 1, 1)]), layer('hidden-2', [unit('b', 10, 10)])],
+    contributions: [],
     y: 3,
   },
 ];
@@ -40,7 +51,12 @@ test('a layer h range is taken from h alone, not from z', () => {
 // to contain it. Reading downstreamValue here would collapse it to zero.
 test('an excluded unit still widens the range its own curves are drawn in', () => {
   const withExcluded: readonly NetworkEvaluation[] = [
-    { x: 0, layers: [layer('hidden-1', [unit('a', 0, 0), unit('b', 4, 4, 0)])], y: 0 },
+    {
+      x: 0,
+      layers: [layer('hidden-1', [unit('a', 0, 0), unit('b', 4, 4, 0)])],
+      contributions: [],
+      y: 0,
+    },
   ];
 
   expect(layerRanges(withExcluded, 'hidden-1').h).toStrictEqual({ min: -0.2, max: 4.2 });

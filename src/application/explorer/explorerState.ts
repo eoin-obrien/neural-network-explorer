@@ -17,6 +17,8 @@ export type ScaleMode = (typeof scaleModes)[number];
  * axis is a teaching intervention, never a change to the network's parameters.
  */
 export interface ExplorerState {
+  /** The teaching data this exploration started from, and returns to on reset. */
+  readonly preset: Preset;
   readonly network: Network;
   readonly probeX: number;
   readonly excludedUnitIds: ExcludedUnitIds;
@@ -27,6 +29,7 @@ export function initialExplorerState(preset: Preset): ExplorerState {
   const [min, max] = preset.xDomain;
 
   return {
+    preset,
     network: preset.network,
     probeX: (min + max) / 2,
     excludedUnitIds: new Set(),

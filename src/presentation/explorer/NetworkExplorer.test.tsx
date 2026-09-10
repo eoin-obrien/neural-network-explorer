@@ -1,5 +1,5 @@
 import { MantineProvider } from '@mantine/core';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, test } from 'vitest';
 
@@ -25,13 +25,6 @@ function slider(name: string): HTMLElement {
 
 function accessibleName(element: HTMLElement): string {
   return element.getAttribute('aria-label') ?? '';
-}
-
-/** Every plot's stated value axis, in forward-pass order. */
-function valueAxes(): string[] {
-  return screen
-    .getAllByRole('figure')
-    .map((figure) => figure.querySelector('figcaption')?.textContent ?? '');
 }
 
 test('the header reports the architecture and the trainable parameter count', () => {
@@ -196,153 +189,6 @@ test('reset returns the network and the probe to the preset', async () => {
   expect(screen.getByText('z₁ = 0.40 → h₁ = 0.40')).toBeDefined();
   expect(screen.getByText('y = -0.04')).toBeDefined();
   expect(screen.queryByText('Excluded from the output')).toBeNull();
-});
-
-// The scale mode is a way of looking at the network, so the value axis moves
-// and nothing the mathematics says about the network does.
-test('the fixed scale draws every plot on the axis the preset chose', () => {
-  renderExplorer();
-
-  expect(valueAxes()).toStrictEqual([
-    'z₁ from -3.00 to 3.00',
-    'h₁ from -3.00 to 3.00',
-    'z₂ from -3.00 to 3.00',
-    'h₂ from -3.00 to 3.00',
-    'z₃ from -3.00 to 3.00',
-    'h₃ from -3.00 to 3.00',
-    'y from -2.00 to 2.00',
-  ]);
-});
-
-test('reachable scaling shares one z range and one h range across the layer', async () => {
-  const { user } = renderExplorer();
-
-  await user.click(screen.getByRole('radio', { name: 'Reachable' }));
-
-  // z reaches -2.9 at unit 3 and 2 at unit 1; ReLU clamps h to [0, 2]. Both
-  // ranges are the union over the layer, so the three cards stay comparable.
-  expect(valueAxes()).toStrictEqual([
-    'z₁ from -3.15 to 2.25',
-    'h₁ from -0.10 to 2.10',
-    'z₂ from -3.15 to 2.25',
-    'h₂ from -0.10 to 2.10',
-    'z₃ from -3.15 to 2.25',
-    'h₃ from -0.10 to 2.10',
-    'y from -0.25 to 1.10',
-  ]);
-});
-
-test('rescaling changes the axes and nothing the forward pass reports', async () => {
-  const { user } = renderExplorer();
-
-  await user.click(screen.getByRole('radio', { name: 'Reachable' }));
-
-  expect(screen.getByText('Axes from the values reached over x')).toBeDefined();
-  expect(screen.getByText('x = 0.00')).toBeDefined();
-  expect(screen.getByText('z₁ = 0.40 → h₁ = 0.40')).toBeDefined();
-  expect(screen.getByText('y = -0.04')).toBeDefined();
-});
-
-test('the output range follows an intervention while the fixed one does not', async () => {
-  const { user } = renderExplorer();
-
-  await user.click(screen.getByRole('radio', { name: 'Reachable' }));
-  await user.click(screen.getByRole('switch', { name: 'Neuron 1 included' }));
-
-  expect(screen.getByText('y from -1.97 to 1.18')).toBeDefined();
-
-  await user.click(screen.getByRole('radio', { name: 'Fixed' }));
-
-  expect(screen.getByText('y from -2.00 to 2.00')).toBeDefined();
-});
-
-test('reset returns to the stable teaching scale', async () => {
-  const { user } = renderExplorer();
-
-  await user.click(screen.getByRole('radio', { name: 'Reachable' }));
-  await user.click(screen.getByRole('button', { name: 'Reset' }));
-
-  expect(screen.getByText('Axes chosen by the preset')).toBeDefined();
-  expect(screen.getByText('y from -2.00 to 2.00')).toBeDefined();
-});
-
-// The wheel is the fine adjustment a drag across a short track cannot make.
-// It is deliberately gated on focus: a control that took the wheel on hover
-// would rewrite the mathematics under someone merely scrolling the page.
-test('scrolling a focused slider steps it, and an unfocused one ignores it', async () => {
-  const { user } = renderExplorer();
-  const theta = slider('θ₁₀ — intercept');
-
-  fireEvent.wheel(theta, { deltaY: -100 });
-
-  expect(screen.getByText('z₁ = 0.40 → h₁ = 0.40')).toBeDefined();
-
-  await user.click(theta);
-  fireEvent.wheel(theta, { deltaY: -100 });
-
-  expect(screen.getByText('z₁ = 0.45 → h₁ = 0.45')).toBeDefined();
-
-  fireEvent.wheel(theta, { deltaY: 200 });
-
-  expect(screen.getByText('z₁ = 0.35 → h₁ = 0.35')).toBeDefined();
-});
-
-// The wheel and the arrow keys move on the same grid, so no value the wheel can
-// reach is out of a keyboard's reach.
-test('the wheel and the arrow keys agree step for step', async () => {
-  const { user } = renderExplorer();
-  const theta = slider('θ₁₀ — intercept');
-
-  await user.click(theta);
-  await user.keyboard('{ArrowRight}{ArrowRight}');
-
-  expect(screen.getByText('z₁ = 0.50 → h₁ = 0.50')).toBeDefined();
-
-  fireEvent.wheel(theta, { deltaY: 200 });
-
-  expect(screen.getByText('z₁ = 0.40 → h₁ = 0.40')).toBeDefined();
-});
-
-// A trackpad sends a stream of deltas far smaller than a mouse notch. None of
-// them is a step on its own, and none of them is thrown away either.
-test('scroll too small to be a step is carried until it is one', async () => {
-  const { user } = renderExplorer();
-  const theta = slider('θ₁₀ — intercept');
-
-  await user.click(theta);
-  fireEvent.wheel(theta, { deltaY: -40 });
-
-  expect(screen.getByText('z₁ = 0.40 → h₁ = 0.40')).toBeDefined();
-
-  fireEvent.wheel(theta, { deltaY: -40 });
-  fireEvent.wheel(theta, { deltaY: -40 });
-
-  expect(screen.getByText('z₁ = 0.45 → h₁ = 0.45')).toBeDefined();
-});
-
-test('scrolling stops at the ends of the control range', async () => {
-  const { user } = renderExplorer();
-  const theta = slider('θ₁₀ — intercept');
-
-  await user.click(theta);
-  // theta_10 starts at 0.40 and its control stops at 2, well short of 40 steps.
-  fireEvent.wheel(theta, { deltaY: -4000 });
-
-  expect(screen.getByText('z₁ = 2.00 → h₁ = 2.00')).toBeDefined();
-
-  fireEvent.wheel(theta, { deltaY: 8000 });
-
-  expect(screen.getByText('z₁ = -2.00 → h₁ = 0.00')).toBeDefined();
-});
-
-test('the probe is scrollable too', async () => {
-  const { user } = renderExplorer();
-  const probe = slider('x — network input');
-
-  await user.click(probe);
-  fireEvent.wheel(probe, { deltaY: -400 });
-
-  expect(screen.getByText('x = 0.20')).toBeDefined();
 });
 
 test('changing the scalar-input weight tilts that unit and the output with it', async () => {

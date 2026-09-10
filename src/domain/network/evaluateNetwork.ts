@@ -1,5 +1,5 @@
 import { evaluateHiddenLayer } from './evaluateHiddenLayer';
-import { evaluateOutputLayer } from './evaluateOutputLayer';
+import { outputContributions, sumContributions } from './outputContributions';
 import type {
   ExcludedUnitIds,
   HiddenLayer,
@@ -35,7 +35,9 @@ export function evaluateNetwork(
     start,
   );
 
-  return { x, layers, y: evaluateOutputLayer(network.output, sourceValues) };
+  const contributions = outputContributions(network.output, sourceValues);
+
+  return { x, layers, contributions, y: sumContributions(network.output.phi0, contributions) };
 }
 
 function advance(

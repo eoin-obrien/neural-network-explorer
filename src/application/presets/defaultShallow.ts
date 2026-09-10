@@ -29,6 +29,7 @@ const network: Network = {
 export const defaultShallowPreset: Preset = {
   id: 'shallow-relu',
   title: 'Shallow neural network',
+  lesson: 'Three hinges compose into a piecewise-linear function.',
   network,
   // Normalized input: every function plot samples this same domain.
   xDomain: [-1, 1],

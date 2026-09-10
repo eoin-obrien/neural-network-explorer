@@ -72,9 +72,23 @@ test('a shallow forward pass retains x, every z and h, and y', () => {
         ],
       },
     ],
+    // The terms of y, kept beside their sum. The second is a negated zero
+    // because -1 * 0 is: the sign is arithmetic, not meaning.
+    contributions: [
+      { sourceId: 'u1', value: 4 },
+      { sourceId: 'u2', value: -0 },
+    ],
     // y = 0.5 + 2 * 2 - 1 * 0
     y: 4.5,
   });
+});
+
+// The terms and the sum are one calculation, so a view can show what each unit
+// puts into y without the risk of the two disagreeing.
+test('the retained terms add up to the y beside them', () => {
+  const { contributions, y } = evaluateNetwork(shallow, 2, none);
+
+  expect(contributions.reduce((sum, term) => sum + term.value, shallow.output.phi0)).toBe(y);
 });
 
 test('phi0 shifts y and nothing else', () => {
