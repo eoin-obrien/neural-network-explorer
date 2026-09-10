@@ -23,7 +23,7 @@ interface NetworkExplorerProps {
 
 export function NetworkExplorer({ preset: initial }: NetworkExplorerProps): ReactElement {
   const [state, dispatch] = useReducer(explorerReducer, initial, initialExplorerState);
-  const { preset, network } = state;
+  const { preset, network, probeX } = state;
 
   /*
    * The controls answer the pointer; the curves catch up.
@@ -38,6 +38,12 @@ export function NetworkExplorer({ preset: initial }: NetworkExplorerProps): Reac
   const drawn = useDeferredValue(state);
   const samples = sampleNetwork(drawn.network, drawn.preset.xDomain, drawn.excludedUnitIds);
   const probe = evaluateNetwork(drawn.network, drawn.probeX, drawn.excludedUnitIds);
+
+  // The stated forward pass is live, not deferred. The probe control prints the
+  // same x beside it, and one forward pass costs a fraction of what drawing the
+  // marker on seventeen plots does, so there is nothing to gain by letting the
+  // two readings of x disagree while a drag settles.
+  const reading = evaluateNetwork(network, probeX, state.excludedUnitIds);
 
   const view = (layerId: LayerId): UnitView => ({
     samples,
@@ -69,6 +75,7 @@ export function NetworkExplorer({ preset: initial }: NetworkExplorerProps): Reac
           output={network.output}
           samples={samples}
           probe={probe}
+          reading={reading}
           xDomain={drawn.preset.xDomain}
           valueRange={outputScale(drawn.scaleMode, drawn.preset.fixedScale, samples)}
           excludedUnitIds={state.excludedUnitIds}

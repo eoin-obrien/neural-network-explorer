@@ -211,3 +211,18 @@ test('the inclusion switch answers its own click', async () => {
   expect(screen.getByText('Excluded from the output')).toBeDefined();
   expect(screen.getByText('y = -0.40')).toBeDefined();
 });
+
+// Two places print the probe's x: the control that sets it and the forward pass
+// stated beside the output. Deferring the plots must not leave those two reading
+// different numbers while a drag settles, so the stated pass is never deferred.
+test('both readings of the probe x agree', async () => {
+  const { user } = renderExplorer();
+
+  await user.click(slider('x — network input'));
+  await user.keyboard('{ArrowRight}{ArrowRight}');
+
+  const control = slider('x — network input').getAttribute('aria-valuenow');
+
+  expect(control).toBe('0.1');
+  expect(screen.getByText('x = 0.10')).toBeDefined();
+});

@@ -19,7 +19,10 @@ import { ProbeSummary } from './ProbeSummary';
 interface OutputSectionProps {
   readonly output: OutputLayer;
   readonly samples: readonly NetworkEvaluation[];
+  /** The point marked on the curve, which may be a render behind the control. */
   readonly probe: NetworkEvaluation;
+  /** The forward pass as stated in text, which never is. */
+  readonly reading: NetworkEvaluation;
   readonly xDomain: XDomain;
   readonly valueRange: ValueRange;
   readonly excludedUnitIds: ExcludedUnitIds;
@@ -30,6 +33,7 @@ export function OutputSection({
   output,
   samples,
   probe,
+  reading,
   xDomain,
   valueRange,
   excludedUnitIds,
@@ -85,7 +89,7 @@ export function OutputSection({
               }}
             />
           </Stack>
-          <ProbeSummary probe={probe} />
+          <ProbeSummary probe={reading} />
         </Group>
       </Stack>
     </Card>
