@@ -124,6 +124,31 @@ test('reachable scaling stays usable while a slider moves', async ({ page }) => 
   await expect(page.getByRole('figure', { name: 'z₁ against x' })).toBeVisible();
 });
 
+// Whether the page scrolls instead of the slider is decided by a real browser's
+// passive-listener rules, which jsdom does not model.
+test('the wheel finely adjusts a focused slider without scrolling the page', async ({ page }) => {
+  await page.goto('/');
+
+  const theta = page.getByRole('slider', { name: 'θ₁₀ — intercept' });
+  await theta.focus();
+  await theta.hover();
+  const scrolled = await page.evaluate(() => window.scrollY);
+
+  await page.mouse.wheel(0, -100);
+
+  await expect(page.getByText('z₁ = 0.45 → h₁ = 0.45')).toBeVisible();
+  expect(await page.evaluate(() => window.scrollY)).toBe(scrolled);
+});
+
+test('the wheel leaves a slider it has not been given alone', async ({ page }) => {
+  await page.goto('/');
+
+  await page.getByRole('slider', { name: 'θ₁₀ — intercept' }).hover();
+  await page.mouse.wheel(0, -100);
+
+  await expect(page.getByText('z₁ = 0.40 → h₁ = 0.40')).toBeVisible();
+});
+
 test('a discrete transition stays inside the motion budget', async ({ page }) => {
   await page.goto('/');
 

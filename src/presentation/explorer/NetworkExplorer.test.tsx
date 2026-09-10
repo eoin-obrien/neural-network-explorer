@@ -1,5 +1,5 @@
 import { MantineProvider } from '@mantine/core';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, test } from 'vitest';
 
@@ -264,6 +264,85 @@ test('reset returns to the stable teaching scale', async () => {
 
   expect(screen.getByText('Axes chosen by the preset')).toBeDefined();
   expect(screen.getByText('y from -2.00 to 2.00')).toBeDefined();
+});
+
+// The wheel is the fine adjustment a drag across a short track cannot make.
+// It is deliberately gated on focus: a control that took the wheel on hover
+// would rewrite the mathematics under someone merely scrolling the page.
+test('scrolling a focused slider steps it, and an unfocused one ignores it', async () => {
+  const { user } = renderExplorer();
+  const theta = slider('θ₁₀ — intercept');
+
+  fireEvent.wheel(theta, { deltaY: -100 });
+
+  expect(screen.getByText('z₁ = 0.40 → h₁ = 0.40')).toBeDefined();
+
+  await user.click(theta);
+  fireEvent.wheel(theta, { deltaY: -100 });
+
+  expect(screen.getByText('z₁ = 0.45 → h₁ = 0.45')).toBeDefined();
+
+  fireEvent.wheel(theta, { deltaY: 200 });
+
+  expect(screen.getByText('z₁ = 0.35 → h₁ = 0.35')).toBeDefined();
+});
+
+// The wheel and the arrow keys move on the same grid, so no value the wheel can
+// reach is out of a keyboard's reach.
+test('the wheel and the arrow keys agree step for step', async () => {
+  const { user } = renderExplorer();
+  const theta = slider('θ₁₀ — intercept');
+
+  await user.click(theta);
+  await user.keyboard('{ArrowRight}{ArrowRight}');
+
+  expect(screen.getByText('z₁ = 0.50 → h₁ = 0.50')).toBeDefined();
+
+  fireEvent.wheel(theta, { deltaY: 200 });
+
+  expect(screen.getByText('z₁ = 0.40 → h₁ = 0.40')).toBeDefined();
+});
+
+// A trackpad sends a stream of deltas far smaller than a mouse notch. None of
+// them is a step on its own, and none of them is thrown away either.
+test('scroll too small to be a step is carried until it is one', async () => {
+  const { user } = renderExplorer();
+  const theta = slider('θ₁₀ — intercept');
+
+  await user.click(theta);
+  fireEvent.wheel(theta, { deltaY: -40 });
+
+  expect(screen.getByText('z₁ = 0.40 → h₁ = 0.40')).toBeDefined();
+
+  fireEvent.wheel(theta, { deltaY: -40 });
+  fireEvent.wheel(theta, { deltaY: -40 });
+
+  expect(screen.getByText('z₁ = 0.45 → h₁ = 0.45')).toBeDefined();
+});
+
+test('scrolling stops at the ends of the control range', async () => {
+  const { user } = renderExplorer();
+  const theta = slider('θ₁₀ — intercept');
+
+  await user.click(theta);
+  // theta_10 starts at 0.40 and its control stops at 2, well short of 40 steps.
+  fireEvent.wheel(theta, { deltaY: -4000 });
+
+  expect(screen.getByText('z₁ = 2.00 → h₁ = 2.00')).toBeDefined();
+
+  fireEvent.wheel(theta, { deltaY: 8000 });
+
+  expect(screen.getByText('z₁ = -2.00 → h₁ = 0.00')).toBeDefined();
+});
+
+test('the probe is scrollable too', async () => {
+  const { user } = renderExplorer();
+  const probe = slider('x — network input');
+
+  await user.click(probe);
+  fireEvent.wheel(probe, { deltaY: -400 });
+
+  expect(screen.getByText('x = 0.20')).toBeDefined();
 });
 
 test('changing the scalar-input weight tilts that unit and the output with it', async () => {
