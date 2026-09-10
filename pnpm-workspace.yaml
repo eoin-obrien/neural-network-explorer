@@ -4,3 +4,15 @@
 peerDependencyRules:
   allowedVersions:
     eslint-plugin-jsx-a11y>eslint: '10'
+
+# Two development-only transitive dependencies carry denial-of-service
+# advisories that their parents pin past: markdownlint-cli2 requires exactly
+# smol-toml 1.7.0, and typed-rest-client exactly qs 6.15.1, so Dependabot
+# reports security_update_not_possible for both. Neither package reaches the
+# production bundle, which the no-dev-dependencies-in-shipped-code architecture
+# rule enforces. smol-toml 1.8.0 is the version cspell and knip already resolve,
+# so pinning it here also collapses the tree to one copy. Drop an entry once its
+# parent's own range covers the fix.
+overrides:
+  smol-toml: 1.8.0
+  qs: 6.15.2
