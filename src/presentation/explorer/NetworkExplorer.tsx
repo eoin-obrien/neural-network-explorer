@@ -1,6 +1,6 @@
 import { Container, Stack } from '@mantine/core';
 import type { ReactElement } from 'react';
-import { useReducer } from 'react';
+import { useDeferredValue, useReducer } from 'react';
 
 import { explorerReducer } from '../../application/explorer/explorerReducer';
 import { initialExplorerState } from '../../application/explorer/explorerState';
@@ -23,19 +23,31 @@ interface NetworkExplorerProps {
 
 export function NetworkExplorer({ preset: initial }: NetworkExplorerProps): ReactElement {
   const [state, dispatch] = useReducer(explorerReducer, initial, initialExplorerState);
-  const { preset, network, probeX, excludedUnitIds, scaleMode } = state;
+  const { preset, network } = state;
 
-  // Derived, never stored: the plotted function, the probe and the axis ranges
-  // are all recomputed from the canonical network on every render.
-  const samples = sampleNetwork(network, preset.xDomain, excludedUnitIds);
-  const probe = evaluateNetwork(network, probeX, excludedUnitIds);
+  /*
+   * The controls answer the pointer; the curves catch up.
+   *
+   * Sampling and drawing every plot is the expensive half of a parameter
+   * change, and a drag emits far more events than that half can service. The
+   * sliders and the equations read the state as it is, so a thumb tracks the
+   * pointer, while the plots read a deferred copy that React is free to
+   * abandon when a newer value has already arrived. Nothing is stored twice:
+   * both are the same canonical state, one render behind at worst.
+   */
+  const drawn = useDeferredValue(state);
+  const samples = sampleNetwork(drawn.network, drawn.preset.xDomain, drawn.excludedUnitIds);
+  const probe = evaluateNetwork(drawn.network, drawn.probeX, drawn.excludedUnitIds);
 
   const view = (layerId: LayerId): UnitView => ({
     samples,
     probe,
-    xDomain: preset.xDomain,
-    scale: layerScale(scaleMode, preset.fixedScale, samples, layerId),
-    excludedUnitIds,
+    xDomain: drawn.preset.xDomain,
+    scale: layerScale(drawn.scaleMode, drawn.preset.fixedScale, samples, layerId),
+    // Live rather than deferred: this drives the inclusion switch, not the
+    // curves. The exclusion is already in the samples, as a withheld
+    // contribution, so a switch answers its own click immediately.
+    excludedUnitIds: state.excludedUnitIds,
     dispatch,
   });
 
@@ -57,9 +69,9 @@ export function NetworkExplorer({ preset: initial }: NetworkExplorerProps): Reac
           output={network.output}
           samples={samples}
           probe={probe}
-          xDomain={preset.xDomain}
-          valueRange={outputScale(scaleMode, preset.fixedScale, samples)}
-          excludedUnitIds={excludedUnitIds}
+          xDomain={drawn.preset.xDomain}
+          valueRange={outputScale(drawn.scaleMode, drawn.preset.fixedScale, samples)}
+          excludedUnitIds={state.excludedUnitIds}
           dispatch={dispatch}
         />
       </Stack>

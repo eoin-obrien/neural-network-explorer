@@ -181,3 +181,33 @@ test('reset returns to the selected preset rather than the initial one', async (
   expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('One hidden unit');
   expect(screen.getByText('4 parameters')).toBeDefined();
 });
+
+/*
+ * The plots read a deferred copy of the state so a drag is not held up by
+ * seventeen redraws. Deferring is a scheduling decision, not a second source of
+ * truth: once React has settled, every reading agrees.
+ *
+ * The inclusion switch is deliberately not deferred. It reports the click it
+ * has just received rather than lagging a frame behind it, and the exclusion is
+ * already carried into the plots as a withheld contribution.
+ */
+test('a settled view agrees with the controls that produced it', async () => {
+  const { user } = renderExplorer();
+
+  await user.click(slider('θ₁₀ — intercept'));
+  await user.keyboard('{ArrowRight}');
+
+  expect(slider('θ₁₀ — intercept').getAttribute('aria-valuenow')).toBe('0.45');
+  expect(screen.getByText('z₁ = 0.45 → h₁ = 0.45')).toBeDefined();
+  expect(screen.getByText('y = 0.01')).toBeDefined();
+});
+
+test('the inclusion switch answers its own click', async () => {
+  const { user } = renderExplorer();
+
+  await user.click(screen.getByRole('switch', { name: 'Neuron 1 included' }));
+
+  expect(screen.getByRole('switch', { name: 'Neuron 1 included', checked: false })).toBeDefined();
+  expect(screen.getByText('Excluded from the output')).toBeDefined();
+  expect(screen.getByText('y = -0.40')).toBeDefined();
+});
