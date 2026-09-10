@@ -2,7 +2,8 @@
  * Mantine's stock dimmed is gray 6, which sits at 3.3:1 on white. The dimmed
  * text here is 12-14px, where WCAG AA asks for 4.5:1, so it moves one shade
  * darker. The selector matches the specificity Mantine declares dimmed with,
- * and only for the light scheme it declares it in; dark resolves separately.
+ * and names the light scheme because that is the one the provider forces: the
+ * attribute is always present, so the rule always applies.
  */
 :root[data-mantine-color-scheme='light'] {
   --mantine-color-dimmed: var(--mantine-color-gray-7);

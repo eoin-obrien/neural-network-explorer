@@ -3,6 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Mantine declares the same color-scheme once it mounts. This is here for
+         the frames before that: without it a dark-mode browser paints the page
+         and its scrollbars dark until React takes over. -->
+    <meta name="color-scheme" content="light" />
     <title>Neural network explorer</title>
   </head>
   <body>
