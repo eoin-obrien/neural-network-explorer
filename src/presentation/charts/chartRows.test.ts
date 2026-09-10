@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest';
 
 import type { NetworkEvaluation } from '../../domain/network/types';
-import { outputRows, unitRows } from './chartRows';
+import { outputPlot, unitRows } from './chartRows';
 
 function evaluation(x: number, z: number, h: number): NetworkEvaluation {
   return {
@@ -10,6 +10,7 @@ function evaluation(x: number, z: number, h: number): NetworkEvaluation {
       { layerId: 'hidden-1', units: [{ unitId: 'a', z, h, downstreamValue: h }] },
       { layerId: 'hidden-2', units: [{ unitId: 'b', z: z * 2, h: h * 2, downstreamValue: h * 2 }] },
     ],
+    contributions: [{ sourceId: 'b', value: h * 2 }],
     y: z + h,
   };
 }
@@ -43,10 +44,21 @@ test('a unit the evaluation does not contain contributes no rows', () => {
 });
 
 test('the output plots y against the same original x', () => {
-  expect(outputRows(samples)).toStrictEqual([
-    { x: -1, value: 1 },
-    { x: 1, value: -0.5 },
+  expect(outputPlot(samples).rows).toStrictEqual([
+    { x: -1, value: 1, 'term-b': 1 },
+    { x: 1, value: -0.5, 'term-b': 0 },
   ]);
+});
+
+// The keys are generated from the network's own connections. Nothing here
+// counts units, so a wider or deeper network needs no change to be plotted.
+// These samples have two layers, so the term names the last layer's unit.
+test('every term of the output sum becomes a series of its own', () => {
+  expect(outputPlot(samples).terms).toStrictEqual([{ key: 'term-b', name: 'φ₁h₂₁' }]);
+});
+
+test('a plot with nothing sampled has no terms rather than a missing one', () => {
+  expect(outputPlot([])).toStrictEqual({ rows: [], terms: [] });
 });
 
 // A single evaluation is how the probe reaches the charts: the marker is the
@@ -58,5 +70,5 @@ test('one evaluation yields exactly one row per function', () => {
     z: [{ x: 0, value: 0.25 }],
     h: [{ x: 0, value: 0.25 }],
   });
-  expect(outputRows([probe])).toStrictEqual([{ x: 0, value: 0.5 }]);
+  expect(outputPlot([probe]).rows).toStrictEqual([{ x: 0, value: 0.5, 'term-b': 0.5 }]);
 });

@@ -40,6 +40,7 @@ const network: Network = {
 const preset: Preset = {
   id: 'test',
   title: 'Test network',
+  lesson: 'A two-layer network for exercising the reducer.',
   network,
   xDomain: [-1, 3],
   fixedScale: { z: { min: -3, max: 3 }, h: { min: -3, max: 3 }, y: { min: -2, max: 2 } },
@@ -146,7 +147,7 @@ test('reset returns exactly to the preset state', () => {
 
   const changed = edits.reduce(explorerReducer, initial);
 
-  expect(explorerReducer(changed, { type: 'reset', preset })).toStrictEqual(initial);
+  expect(explorerReducer(changed, { type: 'reset' })).toStrictEqual(initial);
 });
 
 test('the reducer never mutates the state it is given', () => {

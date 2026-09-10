@@ -17,12 +17,13 @@ import { OutputSection } from './OutputSection';
 import { UnitStrip } from './UnitStrip';
 
 interface NetworkExplorerProps {
+  /** Where the exploration starts; the selector may replace it from there. */
   readonly preset: Preset;
 }
 
-export function NetworkExplorer({ preset }: NetworkExplorerProps): ReactElement {
-  const [state, dispatch] = useReducer(explorerReducer, preset, initialExplorerState);
-  const { network, probeX, excludedUnitIds, scaleMode } = state;
+export function NetworkExplorer({ preset: initial }: NetworkExplorerProps): ReactElement {
+  const [state, dispatch] = useReducer(explorerReducer, initial, initialExplorerState);
+  const { preset, network, probeX, excludedUnitIds, scaleMode } = state;
 
   // Derived, never stored: the plotted function, the probe and the axis ranges
   // are all recomputed from the canonical network on every render.
@@ -45,16 +46,10 @@ export function NetworkExplorer({ preset }: NetworkExplorerProps): ReactElement 
           title={preset.title}
           network={network}
           onReset={() => {
-            dispatch({ type: 'reset', preset });
+            dispatch({ type: 'reset' });
           }}
         />
-        <ExplorerControls
-          network={network}
-          probeX={probeX}
-          xDomain={preset.xDomain}
-          scaleMode={scaleMode}
-          dispatch={dispatch}
-        />
+        <ExplorerControls state={state} dispatch={dispatch} />
         {layerCards(network).map((layer) => (
           <UnitStrip key={layer.layerId} layer={layer} view={view(layer.layerId)} />
         ))}
@@ -64,6 +59,7 @@ export function NetworkExplorer({ preset }: NetworkExplorerProps): ReactElement 
           probe={probe}
           xDomain={preset.xDomain}
           valueRange={outputScale(scaleMode, preset.fixedScale, samples)}
+          excludedUnitIds={excludedUnitIds}
           dispatch={dispatch}
         />
       </Stack>

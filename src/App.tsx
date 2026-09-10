@@ -1,8 +1,8 @@
 import type { ReactElement } from 'react';
 
-import { defaultShallowPreset } from './application/presets/defaultShallow';
+import { initialPreset } from './application/presets/presets';
 import { NetworkExplorer } from './presentation/explorer/NetworkExplorer';
 
 export function App(): ReactElement {
-  return <NetworkExplorer preset={defaultShallowPreset} />;
+  return <NetworkExplorer preset={initialPreset} />;
 }

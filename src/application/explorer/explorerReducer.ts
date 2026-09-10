@@ -10,7 +10,8 @@ type ExplorationAction =
   | { readonly type: 'setProbeX'; readonly value: number }
   | { readonly type: 'setUnitExcluded'; readonly unitId: UnitId; readonly excluded: boolean }
   | { readonly type: 'setScaleMode'; readonly mode: ScaleMode }
-  | { readonly type: 'reset'; readonly preset: Preset };
+  | { readonly type: 'selectPreset'; readonly preset: Preset }
+  | { readonly type: 'reset' };
 
 export type ExplorerAction = NetworkAction | ExplorationAction;
 
@@ -30,13 +31,18 @@ function isExplorationAction(action: ExplorerAction): action is ExplorationActio
     action.type === 'reset' ||
     action.type === 'setProbeX' ||
     action.type === 'setUnitExcluded' ||
-    action.type === 'setScaleMode'
+    action.type === 'setScaleMode' ||
+    action.type === 'selectPreset'
   );
 }
 
 function updateExploration(state: ExplorerState, action: ExplorationAction): ExplorerState {
   switch (action.type) {
+    // Reset and preset selection are the same operation: both start a fresh
+    // exploration of some teaching network, one of which happens to be this one.
     case 'reset':
+      return initialExplorerState(state.preset);
+    case 'selectPreset':
       return initialExplorerState(action.preset);
     case 'setProbeX':
       return { ...state, probeX: action.value };

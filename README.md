@@ -8,10 +8,10 @@ Production site: <https://nn.eoin.ai>
 
 ## Status
 
-Gate 5 — reachable scaling and restrained motion. The dense network engine, the
-exploration state, and the first teaching view are in place: a scalar input `x`,
-one hidden layer of three ReLU units, editable `theta` and `phi`, per-unit plots
-of `z` and `h`, the output `y(x)`, and unit exclusion.
+Gate 6 — teaching polish. The dense network engine, the exploration state, and
+the teaching view are in place: a scalar input `x`, editable `theta` and `phi`,
+per-unit plots of `z` and `h`, the output `y(x)`, unit exclusion, an overlay of
+the weighted terms `φᵢhᵢ`, and three presets.
 
 Every plot is drawn from one shared set of sampled `x` positions and keeps that
 original `x` on its horizontal axis, so a hover anywhere reports the same input
@@ -37,9 +37,77 @@ The engine is not shallow. Width, depth, and activation are read from preset
 data, so a preset with five units renders five cards and a preset with two
 hidden layers renders two strips, with no change to the layout.
 
-Still to come: teaching polish (Gate 6) and domain mutation testing. The gate
-plan lives in [IMPLEMENTATION.md](IMPLEMENTATION.md) and the architectural rules
-in [CLAUDE.md](CLAUDE.md).
+Still to come: domain mutation testing. The gate plan lives in
+[IMPLEMENTATION.md](IMPLEMENTATION.md) and the architectural rules in
+[CLAUDE.md](CLAUDE.md).
+
+Deliberately absent, and not planned for v1: training, datasets, gradient
+descent, and editing a network's shape. The domain would support them, which is
+not a reason to build them. This tool is for seeing what a fixed network
+computes.
+
+## The mathematics
+
+A hidden unit is an affine function of its input followed by an activation.
+For unit `i` of a shallow network:
+
+```text
+zᵢ(x) = θᵢ₀ + θᵢ₁x        pre-activation: an intercept and a slope
+hᵢ(x) = a[zᵢ(x)]          activation: the only nonlinearity in the network
+```
+
+The output is an affine function of those activations, weighted by `phi`:
+
+```text
+y(x) = φ₀ + Σᵢ φᵢhᵢ(x)
+```
+
+Nothing else happens. That is the whole model, and it is why the three plots on
+each card and the one below them are enough to see all of it.
+
+### Why ReLU bends the line
+
+`a[z] = max(0, z)` is two straight lines meeting at `z = 0`, so `hᵢ(x)` is flat
+until `zᵢ(x)` crosses zero and then follows it. That crossing — the **hinge** —
+sits at:
+
+```text
+x = -θᵢ₀ / θᵢ₁
+```
+
+Each unit contributes one hinge, so `n` units cut the input into at most `n + 1`
+regions and `y(x)` is straight within each of them. The default preset places
+its three hinges at `x = -0.25`, `-0.1`, and `0.45`: three bends, four straight
+regions, all inside the sampled domain. Move `θᵢ₀` and the hinge slides; move
+`θᵢ₁` and the ramp tilts; move `φᵢ` and that unit's share of `y` scales.
+
+### Why identity flattens it
+
+Set every activation to identity and each `hᵢ = zᵢ` is affine in `x`. A sum of
+affine functions is affine, so `y(x)` becomes a single straight line however
+many units or layers are stacked. Depth without a nonlinearity buys nothing —
+the app is arranged so you can check that claim rather than take it.
+
+### Parameter count
+
+Each hidden unit owns one intercept plus one weight per incoming connection, and
+the output owns `φ₀` plus one weight per unit it reads. For a dense
+`1 → n → 1` network:
+
+```text
+P(n) = 3n + 1        so P(3) = 10
+```
+
+The activation's own configuration — leaky ReLU's `α`, say — is **not** counted.
+It selects the function `a`; it is not a `theta` or a `phi`.
+
+### Exclusion
+
+Excluding a unit is an intervention on the forward pass, not an edit to the
+network. The unit keeps every parameter, still computes and plots its own `z`
+and `h`, and supplies zero to whatever reads it — so `φᵢhᵢ` drops out of the sum
+while `φᵢ` stays exactly where it was. Exclude every unit and `y` collapses to
+the constant `φ₀`, which the output section says out loud.
 
 ## Notation
 
@@ -104,9 +172,14 @@ presentation    React, Mantine, chart adapters, visual interaction state
 
 The direction is enforced by Dependency Cruiser, not only by convention.
 
-Excluding a unit is an exploration intervention, not a parameter: the unit keeps
-every `theta` it had, still computes and plots its own `z` and `h`, and supplies
-zero to whatever reads it downstream.
+Excluding a unit, moving the probe, choosing a preset, and rescaling an axis are
+all exploration state, held apart from the canonical network. None of them can
+change a `theta` or a `phi`.
+
+Presets are teaching data rather than special-case code, and each is validated
+by tests: unique ids, finite parameters, dense wiring, an activation the registry
+declares, a fixed scale the opening function fits inside, and a function with a
+visible bend in it.
 
 ## Deployment
 

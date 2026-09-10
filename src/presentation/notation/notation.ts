@@ -37,3 +37,17 @@ export function unitIndices(
 export function formatValue(value: number): string {
   return Number(value.toFixed(2)).toFixed(2);
 }
+
+/**
+ * How a unit's activation is written wherever something else refers to it: h₁
+ * in a shallow network, h₂₁ for unit 1 of layer 2 once there is depth. A deeper
+ * layer's incoming weights and the output equation both have to name activations
+ * the way the card that owns them does.
+ */
+export function activationSymbol(
+  layerNumber: number,
+  unitNumber: number,
+  layerCount: number,
+): string {
+  return `h${subscript(unitIndices(layerNumber, unitNumber, layerCount))}`;
+}

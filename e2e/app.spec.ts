@@ -175,6 +175,57 @@ test.describe('with reduced motion requested', () => {
   });
 });
 
+// The overlay adds a series per unit to a real chart; whether Recharts draws
+// them on the same axes as y is not something jsdom can answer.
+test('the output terms can be overlaid on y and taken away again', async ({ page }) => {
+  await page.goto('/');
+
+  const plot = page.getByRole('figure', { name: 'y against x' });
+  const lines = plot.locator('path.recharts-curve');
+  await expect(lines).toHaveCount(1);
+
+  await page.getByRole('switch', { name: 'Show φᵢhᵢ terms' }).click();
+
+  // y itself, plus one term for each of the three units.
+  await expect(lines).toHaveCount(4);
+  await expect(page.getByText('y = -0.04')).toBeVisible();
+});
+
+test('the tooltip states the terms of the sum beneath it', async ({ page }) => {
+  await page.goto('/');
+
+  await page.getByRole('switch', { name: 'Show φᵢhᵢ terms' }).click();
+  await page.getByRole('figure', { name: 'y against x' }).hover();
+
+  await expect(page.getByText(/^y\(-?\d\.\d\d\) = -?\d\.\d\d$/)).toBeVisible();
+  await expect(page.getByText(/^φ₁h₁ = -?\d\.\d\d$/)).toBeVisible();
+});
+
+test('choosing a preset loads that network end to end', async ({ page }) => {
+  await page.goto('/');
+
+  await page.getByRole('combobox', { name: 'Network' }).click();
+  await page.getByRole('option', { name: 'Two hidden layers' }).click();
+
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Two hidden layers');
+  await expect(page.getByText('1 → 2 ReLU → 2 ReLU → 1')).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Hidden layer 2' })).toBeVisible();
+  await expect(page.getByText('13 parameters')).toBeVisible();
+  // A deeper unit reads the layer below it, named as that layer names itself.
+  await expect(page.getByRole('slider', { name: 'θ₂₁₁ — weight on h₁₁' })).toBeVisible();
+});
+
+test('excluding every unit leaves y as the constant it says it is', async ({ page }) => {
+  await page.goto('/');
+
+  for (const number of [1, 2, 3]) {
+    await page.getByRole('switch', { name: `Neuron ${String(number)} included` }).click();
+  }
+
+  await expect(page.getByText('Every unit is excluded, so y is the constant φ₀.')).toBeVisible();
+  await expect(page.getByText('y = -0.40')).toBeVisible();
+});
+
 test('reset restores the preset', async ({ page }) => {
   await page.goto('/');
 

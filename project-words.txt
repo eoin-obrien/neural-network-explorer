@@ -1,5 +1,7 @@
 # Mathematical vocabulary (Prince, Understanding Deep Learning)
 affine
+# The weighted output term as the interface writes it, subscripts and all.
+φᵢhᵢ
 phi
 relu
 sigmoid

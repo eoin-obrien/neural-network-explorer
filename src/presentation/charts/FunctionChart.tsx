@@ -5,13 +5,15 @@ import type { ReactElement } from 'react';
 import type { XDomain } from '../../domain/network/types';
 import type { ValueRange } from '../../domain/range/reachableRange';
 import { formatValue } from '../notation/notation';
-import type { ChartRow } from './chartRows';
+import type { ChartRow, TermSeries } from './chartRows';
 import { MathTooltip } from './MathTooltip';
 
 interface FunctionChartProps {
   readonly rows: readonly ChartRow[];
   /** The probe as a row of this same function: none, or exactly one. */
   readonly probeRows: readonly ChartRow[];
+  /** Terms of the plotted sum, drawn beneath it. A plain function has none. */
+  readonly terms?: readonly TermSeries[];
   readonly xDomain: XDomain;
   readonly valueRange: ValueRange;
   readonly color: string;
@@ -26,9 +28,15 @@ interface FunctionChartProps {
 // drawn from the one shared set of sampled x positions.
 const syncId = 'forward-pass';
 
+// A term is drawn quieter and dashed so the sum stays the figure of the chart
+// and the terms read as what it is made of.
+const termColor = 'gray.6';
+const termDash = '4 4';
+
 export function FunctionChart({
   rows,
   probeRows,
+  terms = [],
   xDomain,
   valueRange,
   color,
@@ -43,9 +51,17 @@ export function FunctionChart({
         h={height}
         // Recharts types its rows as Record<string, any>, which a readonly
         // interface is not assignable to; this is where that shape is adopted.
-        data={rows.map((row) => ({ x: row.x, value: row.value }))}
+        data={rows.map((row) => ({ ...row }))}
         dataKey="x"
-        series={[{ name: 'value', label: name, color }]}
+        series={[
+          { name: 'value', label: name, color },
+          ...terms.map((term) => ({
+            name: term.key,
+            label: term.name,
+            color: termColor,
+            strokeDasharray: termDash,
+          })),
+        ]}
         lineChartProps={{ syncId, syncMethod: 'index' }}
         // The horizontal axis stays the original scalar input at every stage of
         // the forward pass, so one x means the same thing in every chart.
@@ -67,7 +83,7 @@ export function FunctionChart({
         // pinned probe never reads as a stray hover.
         referenceLines={probeRows.map((row) => ({ x: row.x, color: 'gray.5' }))}
         referenceDots={probeRows.map((row) => ({ x: row.x, y: row.value, color, r: 4 }))}
-        tooltipProps={{ content: <MathTooltip name={name} rows={rows} /> }}
+        tooltipProps={{ content: <MathTooltip name={name} terms={terms} rows={rows} /> }}
         // ReLU is piecewise linear. A smoothed curve would draw bends the
         // mathematics does not have.
         curveType="linear"
@@ -82,13 +98,20 @@ export function FunctionChart({
         strokeWidth={2}
         gridAxis="xy"
       />
-      {/* What the value axis currently spans, as text. Switching the scale is
-          then perceivable without reading tick labels off a small chart, and
-          without the plot's own name changing under a screen reader as the
-          reachable range follows the sliders. */}
-      <VisuallyHidden component="figcaption">
-        {`${name} from ${formatValue(valueRange.min)} to ${formatValue(valueRange.max)}`}
-      </VisuallyHidden>
+      {/* What the plot currently draws, as text: the span of its value axis,
+          and the terms overlaid on it. Switching the scale or the overlay is
+          then perceivable without reading a small chart, and without the plot's
+          own name changing under a screen reader as the reachable range follows
+          the sliders. */}
+      <VisuallyHidden component="figcaption">{caption(name, valueRange, terms)}</VisuallyHidden>
     </Box>
   );
+}
+
+function caption(name: string, valueRange: ValueRange, terms: readonly TermSeries[]): string {
+  const axis = `${name} from ${formatValue(valueRange.min)} to ${formatValue(valueRange.max)}`;
+
+  return terms.length === 0
+    ? axis
+    : `${axis}, with terms ${terms.map((term) => term.name).join(', ')}`;
 }

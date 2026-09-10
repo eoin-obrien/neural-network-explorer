@@ -16,6 +16,8 @@ export interface FixedScale {
 export interface Preset {
   readonly id: string;
   readonly title: string;
+  /** What this network is for: the one thing it is arranged to show. */
+  readonly lesson: string;
   readonly network: Network;
   readonly xDomain: XDomain;
   readonly fixedScale: FixedScale;
