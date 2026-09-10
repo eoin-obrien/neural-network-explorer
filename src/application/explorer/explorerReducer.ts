@@ -1,4 +1,4 @@
-import type { ExcludedUnitIds, UnitId } from '../../domain/network/types';
+import type { ExcludedUnitIds, Network, UnitId } from '../../domain/network/types';
 import type { Preset } from '../presets/preset';
 import type { ExplorerState, ScaleMode } from './explorerState';
 import { initialExplorerState } from './explorerState';
@@ -23,7 +23,23 @@ export type ExplorerAction = NetworkAction | ExplorationAction;
 export function explorerReducer(state: ExplorerState, action: ExplorerAction): ExplorerState {
   return isExplorationAction(action)
     ? updateExploration(state, action)
-    : { ...state, network: updateNetwork(state.network, action) };
+    : withNetwork(state, updateNetwork(state.network, action, state.preset.xDomain));
+}
+
+/**
+ * Exploration state names units by id, so a network edit that retires a unit
+ * must not leave an exclusion behind that nothing on screen can lift. Narrowing
+ * the exclusions to units that still exist keeps that invariant in one place,
+ * rather than asking every future network edit to remember it.
+ */
+function withNetwork(state: ExplorerState, network: Network): ExplorerState {
+  const live = new Set(network.hiddenLayers.flatMap((layer) => layer.units.map((unit) => unit.id)));
+
+  return {
+    ...state,
+    network,
+    excludedUnitIds: new Set([...state.excludedUnitIds].filter((unitId) => live.has(unitId))),
+  };
 }
 
 function isExplorationAction(action: ExplorerAction): action is ExplorationAction {

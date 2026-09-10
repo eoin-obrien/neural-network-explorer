@@ -1,0 +1,42 @@
+/*
+ * Native overflow rather than a scripted scroll area. The browser decides
+ * whether a scrollbar is needed from the layout it has just performed, so a
+ * strip wider than its container always shows one. An overlay scrollbar
+ * measured by an observer can disagree with that layout, and did: it stayed
+ * hidden at wide viewports while the cards were plainly cut off.
+ */
+.strip {
+  overflow-x: auto;
+
+  /*
+   * Naming a width and a colour opts out of the platform's overlay scrollbar,
+   * which fades away when it is not being dragged. That default hides the only
+   * evidence that a layer continues past the edge, so the affordance is stated
+   * rather than left to an operating-system preference.
+   */
+  scrollbar-width: thin;
+  scrollbar-color: var(--mantine-color-gray-5) var(--mantine-color-gray-2);
+
+  /* Room beneath the cards so the bar never sits over a slider. */
+  padding-bottom: var(--mantine-spacing-xs);
+}
+
+/*
+ * WebKit and Blink still read the prefixed pseudo-elements rather than
+ * scrollbar-width, and ignoring them leaves those browsers on the overlay
+ * scrollbar the rule above is meant to replace. Kept alongside the standard
+ * properties, not instead of them.
+ */
+.strip::-webkit-scrollbar {
+  height: 10px;
+}
+
+.strip::-webkit-scrollbar-track {
+  background: var(--mantine-color-gray-2);
+  border-radius: 5px;
+}
+
+.strip::-webkit-scrollbar-thumb {
+  background: var(--mantine-color-gray-5);
+  border-radius: 5px;
+}
