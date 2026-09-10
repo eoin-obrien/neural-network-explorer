@@ -51,12 +51,18 @@ jobs:
             pnpm commitlint --from "${BASE_SHA}" --to "${HEAD_SHA}" --verbose
           fi
 
+      # main is squash-merged, so the title becomes the commit subject — with
+      # GitHub's " (#123)" appended, which counts against the header length
+      # limit like any other characters. Linting the title as typed passes a
+      # title that is within the limit and still lands over it, which is a
+      # failure on main, after the merge, where the commit can no longer be
+      # amended. Lint what main will actually receive.
       - name: Lint pull-request title
         if: github.event_name == 'pull_request'
         env:
-          # main is squash-merged, so this title becomes the commit subject.
           PR_TITLE: ${{ github.event.pull_request.title }}
-        run: printf '%s' "${PR_TITLE}" | pnpm commitlint --verbose
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: printf '%s (#%s)' "${PR_TITLE}" "${PR_NUMBER}" | pnpm commitlint --verbose
 
   quality:
     name: Quality gate
