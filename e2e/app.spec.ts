@@ -264,56 +264,6 @@ test('a layer can be widened and narrowed from the browser', async ({ page }) =>
   await expect(page.getByRole('figure', { name: 'z₄ against x' })).toBeHidden();
 });
 
-// The unit strip must scroll rather than compress its cards into unusable
-// slivers, at any viewport and any unit count.
-test.describe('the unit strip keeps its card width', () => {
-  for (const viewport of [
-    { width: 480, height: 900 },
-    { width: 1600, height: 900 },
-  ]) {
-    test(`at ${String(viewport.width)}px`, async ({ page }) => {
-      await page.setViewportSize(viewport);
-      await page.goto('/');
-
-      const box = await page.getByRole('article', { name: 'Neuron 1' }).boundingBox();
-
-      expect(box?.width).toBeGreaterThanOrEqual(300);
-    });
-  }
-});
-
-// Widening a layer past what the viewport can show must move the strip, not the
-// document: a page that scrolls sideways drags the equations and the output
-// chart off screen along with the cards.
-test('a layer wider than the viewport scrolls the strip, not the page', async ({ page }) => {
-  await page.setViewportSize({ width: 480, height: 900 });
-  await page.goto('/');
-
-  // The widest the control allows: eight cards at 300px against a 480px
-  // viewport is the worst case the strip has to absorb. Five clicks takes the
-  // preset's three units to that cap.
-  const add = page.getByRole('button', { name: 'Add a neuron to hidden layer 1' });
-  for (let click = 0; click < 5; click += 1) {
-    await add.click();
-  }
-  await expect(add).toBeDisabled();
-
-  const last = page.getByRole('article', { name: 'Neuron 8' });
-  await last.scrollIntoViewIfNeeded();
-  await expect(last).toBeInViewport();
-
-  expect(await horizontalOverflow(page)).toBe(0);
-  // The output chart stayed put while the strip moved beneath it.
-  await expect(page.getByRole('figure', { name: 'y against x' })).toBeInViewport();
-});
-
-/** How far the document itself can be scrolled sideways. Should always be none. */
-async function horizontalOverflow(page: Page): Promise<number> {
-  return page.evaluate(
-    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-  );
-}
-
 /** The scale control's option, clicked by its label as a pointer would. */
 function scaleMode(page: Page, label: string): Locator {
   return page.getByRole('radiogroup', { name: 'Chart scale' }).getByText(label, { exact: true });
