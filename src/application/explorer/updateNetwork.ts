@@ -6,6 +6,7 @@ import type {
   Network,
   NodeId,
   UnitId,
+  XDomain,
 } from '../../domain/network/types';
 import { addUnit, removeUnit } from './resizeLayer';
 
@@ -28,7 +29,11 @@ export type NetworkAction =
 
 type ThetaAction = Extract<NetworkAction, { type: 'setThetaBias' | 'setTheta' }>;
 
-export function updateNetwork(network: Network, action: NetworkAction): Network {
+/**
+ * The input domain reaches this far because a new unit's parameters are chosen
+ * to put its hinge somewhere visible within it. No other edit consults it.
+ */
+export function updateNetwork(network: Network, action: NetworkAction, xDomain: XDomain): Network {
   switch (action.type) {
     case 'setThetaBias':
     case 'setTheta':
@@ -56,7 +61,7 @@ export function updateNetwork(network: Network, action: NetworkAction): Network 
     case 'setPhi0':
       return { ...network, output: { ...network.output, phi0: action.value } };
     case 'addUnit':
-      return addUnit(network, action.layerId);
+      return addUnit(network, action.layerId, xDomain);
     case 'removeUnit':
       return removeUnit(network, action.layerId);
   }

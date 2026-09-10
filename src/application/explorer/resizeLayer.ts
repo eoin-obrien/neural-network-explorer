@@ -6,8 +6,11 @@ import type {
   NodeId,
   OutputLayer,
   UnitId,
+  XDomain,
 } from '../../domain/network/types';
 import { inputNodeId } from '../../domain/network/types';
+import type { DrawnUnit, UnitPlacement } from './newUnitParameters';
+import { drawUnit } from './newUnitParameters';
 
 /**
  * A hidden layer always keeps at least one unit. A layer with none has no
@@ -16,25 +19,15 @@ import { inputNodeId } from '../../domain/network/types';
  */
 export const minLayerWidth = 1;
 
-// A unit arrives as a hinge through the origin — no bias, every incoming weight
-// 1 — with a modest output weight, so the capacity that was just added is
-// visible without swamping the function already on screen.
-//
-// Fixed rather than random: the same click on the same network must always
-// produce the same network, exactly as evaluation and sampling are deterministic.
-const addedThetaBias = 0;
-const addedTheta = 1;
-const addedPhi = 0.5;
-
 /**
  * Width is a property of the network, so widening a layer writes parameters: the
  * new unit brings its own theta, and whatever reads that layer gains the
  * connection that reads it — a phi when the layer is last, otherwise a theta on
  * every unit of the layer above.
  */
-export function addUnit(network: Network, layerId: LayerId): Network {
+export function addUnit(network: Network, layerId: LayerId, xDomain: XDomain): Network {
   return positionsOf(network, layerId).reduce(
-    (current, { index }) => withUnitAdded(current, index),
+    (current, { index }) => withUnitAdded(current, index, xDomain),
     network,
   );
 }
@@ -65,17 +58,47 @@ function positionsOf(
     .filter(({ layer }) => layer.id === layerId);
 }
 
-function withUnitAdded(network: Network, targetIndex: number): Network {
-  const unit = newUnitFor(network, targetIndex);
+function withUnitAdded(network: Network, targetIndex: number, xDomain: XDomain): Network {
+  const drawn = drawUnit(
+    seedFor(network, targetIndex),
+    placementFor(network, targetIndex, xDomain),
+  );
+  const unit = newUnitFor(network, targetIndex, drawn);
 
   return {
     hiddenLayers: network.hiddenLayers.map((layer, index) =>
       layerAfterAdd(layer, index, targetIndex, unit),
     ),
     output: isLastLayer(network, targetIndex)
-      ? { ...network.output, incomingPhi: [...network.output.incomingPhi, phiFor(unit.id)] }
+      ? {
+          ...network.output,
+          incomingPhi: [...network.output.incomingPhi, { sourceId: unit.id, value: drawn.phi }],
+        }
       : network.output,
   };
+}
+
+/**
+ * The seed is where the unit sits, so the fourth unit of a layer is always the
+ * same fourth unit: removing it and adding it again brings back what was there,
+ * and two different layers do not receive the same parameters.
+ */
+function seedFor(network: Network, targetIndex: number): number {
+  return targetIndex * 97 + widthOf(network, targetIndex);
+}
+
+function placementFor(network: Network, targetIndex: number, xDomain: XDomain): UnitPlacement {
+  const sources = sourceIdsFor(network, targetIndex);
+
+  return targetIndex === 0
+    ? { reads: 'input', xDomain, ordinal: widthOf(network, targetIndex) }
+    : { reads: 'layer', sources: sources.length };
+}
+
+function widthOf(network: Network, layerIndex: number): number {
+  return network.hiddenLayers
+    .filter((_, index) => index === layerIndex)
+    .reduce((count, layer) => count + layer.units.length, 0);
 }
 
 function withUnitRemoved(network: Network, targetIndex: number, unitId: UnitId): Network {
@@ -105,7 +128,9 @@ function layerAfterAdd(
       ...layer,
       units: layer.units.map((above) => ({
         ...above,
-        incomingTheta: [...above.incomingTheta, { sourceId: unit.id, value: addedTheta }],
+        // The layer above weights the new activation the way it weights the
+        // rest of that layer, so one added unit cannot dominate it.
+        incomingTheta: [...above.incomingTheta, { sourceId: unit.id, value: typicalWeight(above) }],
       })),
     };
   }
@@ -138,15 +163,33 @@ function layerAfterRemove(
   return layer;
 }
 
-function newUnitFor(network: Network, targetIndex: number): HiddenUnit {
+function newUnitFor(network: Network, targetIndex: number, drawn: DrawnUnit): HiddenUnit {
   return {
     id: freshUnitId(network, targetIndex),
-    thetaBias: addedThetaBias,
-    incomingTheta: sourceIdsFor(network, targetIndex).map((sourceId) => ({
+    thetaBias: drawn.thetaBias,
+    // The drawn weights are in source order. Selected by filtering rather than
+    // by index so a source the draw did not cover reads as an unconnected zero
+    // rather than as an absent value.
+    incomingTheta: sourceIdsFor(network, targetIndex).map((sourceId, index) => ({
       sourceId,
-      value: addedTheta,
+      value: drawn.theta.filter((_, at) => at === index).reduce((_, value) => value, 0),
     })),
   };
+}
+
+// The mean magnitude of what this unit already reads, keeping its sign varied
+// by following the weight it carries first.
+function typicalWeight(unit: HiddenUnit): number {
+  return unit.incomingTheta
+    .slice(0, 1)
+    .reduce((_, theta) => Math.sign(theta.value) * meanMagnitude(unit), 0);
+}
+
+function meanMagnitude(unit: HiddenUnit): number {
+  return (
+    unit.incomingTheta.reduce((total, theta) => total + Math.abs(theta.value), 0) /
+    unit.incomingTheta.length
+  );
 }
 
 // The first hidden layer reads the scalar input; a deeper one reads the
@@ -181,10 +224,6 @@ function freshUnitId(network: Network, layerIndex: number): UnitId {
 
 function isLastLayer(network: Network, layerIndex: number): boolean {
   return layerIndex === network.hiddenLayers.length - 1;
-}
-
-function phiFor(unitId: UnitId): { readonly sourceId: UnitId; readonly value: number } {
-  return { sourceId: unitId, value: addedPhi };
 }
 
 function withoutSource(output: OutputLayer, unitId: UnitId): OutputLayer {

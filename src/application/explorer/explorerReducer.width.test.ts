@@ -34,9 +34,11 @@ test('a unit added to the last hidden layer brings a theta bias, a theta and a p
   // The default 1 -> 3 -> 1 preset has 10; a fourth unit adds its bias, its
   // weight on x, and the phi that reads it.
   expect(countParameters(next.network)).toBe(13);
-  // A hinge through the origin: no bias, unit weight on the scalar input.
-  expect(layer?.units.at(3)?.thetaBias).toBe(0);
-  expect(layer?.units.at(3)?.incomingTheta).toStrictEqual([{ sourceId: inputNodeId, value: 1 }]);
+  // One weight, on the scalar input, because this is the first hidden layer.
+  expect(layer?.units.at(3)?.incomingTheta.map((theta) => theta.sourceId)).toStrictEqual([
+    inputNodeId,
+  ]);
+  expect(Number.isFinite(layer?.units.at(3)?.thetaBias)).toBe(true);
 });
 
 test('the added unit is read by the output layer', () => {

@@ -23,7 +23,7 @@ export type ExplorerAction = NetworkAction | ExplorationAction;
 export function explorerReducer(state: ExplorerState, action: ExplorerAction): ExplorerState {
   return isExplorationAction(action)
     ? updateExploration(state, action)
-    : withNetwork(state, updateNetwork(state.network, action));
+    : withNetwork(state, updateNetwork(state.network, action, state.preset.xDomain));
 }
 
 /**
