@@ -87,9 +87,20 @@ These are decisions, not oversights. Revisit them rather than copying them.
   equations. Every other Markdown file is fully gated.
 - **`src/main.tsx` is excluded from coverage.** It is the DOM bootstrap. All
   other source is held to 100% statements, branches, functions, and lines.
-- **Mutation testing is not configured yet.** Per IMPLEMENTATION.md it is
-  introduced after Gate 2. The domain now exists, so this is the next piece of
-  tooling owed rather than a standing decision.
+- **Two domain mutants are documented as equivalent rather than killed.** Both
+  carry a `Stryker disable next-line` comment giving the reason, and both are
+  cases where no test could tell the difference:
+  - `leakyRelu` at `z >= 0` versus `z > 0`. Leaky ReLU is continuous at zero, so
+    both branches return 0 there. The `>=` is the definition; the mutant is
+    equivalent, not uncaught.
+  - `inputNodeId`'s literal `'x'`. Nothing compares against the string — every
+    reference goes through the constant, which is what makes the identity
+    opaque. That the mutant survives is a property of the design.
+
+  Any other survivor in `src/domain/**` is a gap in the specification. The
+  threshold is a hard 100, so the build fails until it is killed or, with a
+  stated reason, shown to be equivalent.
+
 - **The bundle budget jumped at Gate 3.** The gzip JavaScript limit went from
   80 kB to 245 kB against a measured 232.0 kB. Mantine Charts and its Recharts
   dependency tree — Redux Toolkit, Immer, `es-toolkit`, and the d3 modules

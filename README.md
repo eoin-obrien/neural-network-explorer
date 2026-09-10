@@ -37,9 +37,13 @@ The engine is not shallow. Width, depth, and activation are read from preset
 data, so a preset with five units renders five cards and a preset with two
 hidden layers renders two strips, with no change to the layout.
 
-Still to come: domain mutation testing. The gate plan lives in
-[IMPLEMENTATION.md](IMPLEMENTATION.md) and the architectural rules in
-[CLAUDE.md](CLAUDE.md).
+The domain's tests are themselves held to account. Stryker mutates every
+operator, branch, and literal in `src/domain/**` and fails the build if the
+suite does not notice — coverage says every line ran, not that a test would
+have caught `+` becoming `-`. It runs on every pull request and scores 100%.
+
+The gate plan lives in [IMPLEMENTATION.md](IMPLEMENTATION.md) and the
+architectural rules in [CLAUDE.md](CLAUDE.md).
 
 Deliberately absent, and not planned for v1: training, datasets, gradient
 descent, and editing a network's shape. The domain would support them, which is
@@ -157,6 +161,7 @@ pnpm install
 | `pnpm test`          | Unit and component tests                    |
 | `pnpm test:coverage` | Tests with coverage thresholds              |
 | `pnpm test:e2e`      | Playwright with accessibility checks        |
+| `pnpm test:mutation` | Stryker against `src/domain/**`             |
 | `pnpm size`          | Production bundle-size budget               |
 | `pnpm commitlint`    | Commitlint entry point; CI supplies a range |
 

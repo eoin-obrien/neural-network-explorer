@@ -3,6 +3,8 @@ coverage/
 playwright-report/
 test-results/
 blob-report/
+reports/
+.stryker-tmp/
 pnpm-lock.yaml
 
 # Specification documents. They embed raw LaTeX display math, which is not

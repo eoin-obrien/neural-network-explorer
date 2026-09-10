@@ -18,6 +18,8 @@ ignorePaths:
   - coverage/**
   - playwright-report/**
   - test-results/**
+  - reports/**
+  - .stryker-tmp/**
   - pnpm-lock.yaml
 
 dictionaryDefinitions:

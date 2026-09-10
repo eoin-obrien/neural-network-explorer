@@ -7,6 +7,12 @@ export type UnitId = string;
 
 // The scalar network input is the only source the first hidden layer reads, so
 // it needs a node identity like any other connection source.
+//
+// Nothing anywhere compares against the literal: every reference goes through
+// this constant, which is exactly what makes the identity opaque. Changing the
+// string is therefore unobservable, so the mutant is equivalent rather than
+// uncaught. 'x' is chosen to read as the mathematics does.
+// Stryker disable next-line StringLiteral: equivalent, no behaviour reads the literal
 export const inputNodeId: NodeId = 'x';
 
 interface IncomingTheta {
