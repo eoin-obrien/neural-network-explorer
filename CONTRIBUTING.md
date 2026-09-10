@@ -87,6 +87,15 @@ These are decisions, not oversights. Revisit them rather than copying them.
   equations. Every other Markdown file is fully gated.
 - **`src/main.tsx` is excluded from coverage.** It is the DOM bootstrap. All
   other source is held to 100% statements, branches, functions, and lines.
+- **A pull-request title has about 66 characters, not 72.** `main` is
+  squash-merged, so GitHub appends `" (#123)"` to the title to form the commit
+  subject, and those characters count against Commitlint's 72-character header
+  limit. CI lints the title with that suffix appended, because a title checked
+  without it can pass on the pull request and still fail on `main` — where the
+  commit can no longer be amended, and where a failed commit-style job skips the
+  Pages deployment. Commit `33e1601` is the one that got through before this was
+  caught.
+
 - **Two domain mutants are documented as equivalent rather than killed.** Both
   carry a `Stryker disable next-line` comment giving the reason, and both are
   cases where no test could tell the difference:
