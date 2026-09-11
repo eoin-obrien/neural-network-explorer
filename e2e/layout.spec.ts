@@ -6,6 +6,29 @@ import { expect, test } from '@playwright/test';
 // takes any overflow rather than the document, and it stays operable without a
 // pointer. Split from app.spec.ts, which covers the mathematics and controls.
 
+// The colour scheme is fixed rather than followed. Everything here is chosen
+// against a light ground: the dimmed contrast ratios, the chart colours, and the
+// scrollbar the strip draws. Emulating the other preference is the only way to
+// find out whether the application actually ignores it.
+test.describe('on a system that prefers dark', () => {
+  test.use({ colorScheme: 'dark' });
+
+  test('the application stays light', async ({ page }) => {
+    await page.goto('/');
+
+    await expect(page.locator('html')).toHaveAttribute('data-mantine-color-scheme', 'light');
+
+    // The scheme reached paint, rather than only the attribute being set.
+    const background = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+
+    expect(background).toBe('rgb(255, 255, 255)');
+
+    // The Axe contrast rules are written against the colours actually painted,
+    // so a scheme that half-applied would show up here rather than as a look.
+    expect(await seriousViolations(page)).toEqual([]);
+  });
+});
+
 // The unit strip must scroll rather than compress its cards into unusable
 // slivers, at any viewport and any unit count.
 test.describe('the unit strip keeps its card width', () => {
@@ -80,16 +103,7 @@ test('a scrolling strip is keyboard reachable and free of Axe violations', async
   }
   expect(await scrollLeftOf(strip)).toBeGreaterThan(0);
 
-  const { violations } = await new AxeBuilder({ page }).analyze();
-  const serious = violations.filter(
-    (violation) => violation.impact === 'serious' || violation.impact === 'critical',
-  );
-
-  expect(
-    serious.map(
-      (violation) => `${violation.id}: ${violation.nodes.map((node) => node.target).join(', ')}`,
-    ),
-  ).toEqual([]);
+  expect(await seriousViolations(page)).toEqual([]);
 });
 
 /** How much of the strip's content sits beyond its own visible width. */
@@ -107,4 +121,18 @@ async function horizontalOverflow(page: Page): Promise<number> {
   return page.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
   );
+}
+
+/**
+ * Serious and critical Axe findings, each named with the elements it landed on:
+ * a bare rule id says nothing about what failed.
+ */
+async function seriousViolations(page: Page): Promise<readonly string[]> {
+  const { violations } = await new AxeBuilder({ page }).analyze();
+
+  return violations
+    .filter((violation) => violation.impact === 'serious' || violation.impact === 'critical')
+    .map(
+      (violation) => `${violation.id}: ${violation.nodes.map((node) => node.target).join(', ')}`,
+    );
 }

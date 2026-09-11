@@ -19,7 +19,11 @@ if (container === null) {
 
 createRoot(container).render(
   <StrictMode>
-    <MantineProvider theme={theme}>
+    {/* One scheme, whatever the operating system prefers. The charts, the
+        dimmed contrast ratios and the strip's scrollbar are all chosen against
+        a light ground, and a teaching view that changes colour underneath a
+        class is a variable nobody asked for. */}
+    <MantineProvider theme={theme} forceColorScheme="light">
       <App />
     </MantineProvider>
   </StrictMode>,
